@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using NUnit.Framework;
 using VikunjaPlugin.Api;
+using VikunjaPlugin.Widgets;
 
 namespace VikunjaPlugin.Tests;
 
@@ -10,6 +11,7 @@ public sealed class TaskStoreTests
 {
 	private static readonly string[] ExpectedTitles = ["Buy milk", "Call Ana"];
 	private static readonly long[] RemainingIds = [2];
+	private static readonly long[] ExpectedOrder = [3, 2, 1];
 	private const string TwoTasks = """[{"id":1,"title":"Buy milk","done":false},{"id":2,"title":"Call Ana","done":false}]""";
 
 	[Test]
@@ -119,6 +121,112 @@ public sealed class TaskStoreTests
 		Assert.DoesNotThrowAsync(() => store.RefreshAsync(CancellationToken.None));
 		var failure = Assert.ThrowsAsync<VikunjaException>(() => store.CompleteAsync(1, CancellationToken.None));
 		Assert.That(failure!.Reason, Is.EqualTo(VikunjaFailure.Rejected));
+	}
+
+	[Test]
+	public async Task Dated_tasks_come_first_soonest_due_first_and_undated_ones_last()
+	{
+		var fake = new FakeVikunja
+		{
+			Respond = (_, _) => FakeVikunja.Json("""
+				[{"id":1,"title":"Undated","due_date":"0001-01-01T00:00:00Z"},
+				 {"id":2,"title":"Later","due_date":"2026-12-01T10:00:00Z"},
+				 {"id":3,"title":"Sooner","due_date":"2026-11-15T10:00:00Z"}]
+				"""),
+		};
+		var store = fake.CreateStore(out _);
+
+		await store.RefreshAsync(CancellationToken.None);
+
+		Assert.That(store.Tasks.Peek().Select(t => t.Id), Is.EqualTo(ExpectedOrder));
+	}
+
+	[Test]
+	public async Task Status_tells_apart_ready_unavailable_and_not_configured()
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var store = fake.CreateStore(out var credentials);
+		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.Loading));
+
+		await store.RefreshAsync(CancellationToken.None);
+		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.Ready));
+
+		fake.Respond = (_, _) => new HttpResponseMessage(HttpStatusCode.Unauthorized);
+		await store.RefreshAsync(CancellationToken.None);
+		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.Unavailable));
+
+		credentials.Clear();
+		await store.RefreshAsync(CancellationToken.None);
+		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.NotConfigured));
+	}
+
+	[Test]
+	public async Task An_unchanged_list_is_not_written_back()
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var store = fake.CreateStore(out _);
+		await store.RefreshAsync(CancellationToken.None);
+		var before = store.Tasks.Peek();
+
+		await store.RefreshAsync(CancellationToken.None);
+
+		Assert.That(store.Tasks.Peek(), Is.SameAs(before));
+	}
+
+	[Test]
+	public async Task Reset_forgets_the_previous_accounts_tasks()
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var store = fake.CreateStore(out _);
+		await store.RefreshAsync(CancellationToken.None);
+
+		store.Reset();
+
+		Assert.That(store.Tasks.Peek(), Is.Empty);
+		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.Loading));
+	}
+
+	[Test]
+	public void A_network_error_maps_to_unreachable()
+	{
+		var client = ClientThrowing(new HttpRequestException());
+
+		var failure = Assert.ThrowsAsync<VikunjaException>(() => client.GetOpenTasksAsync(5, CancellationToken.None));
+
+		Assert.That(failure!.Reason, Is.EqualTo(VikunjaFailure.Unreachable));
+	}
+
+	[Test]
+	public void A_timeout_maps_to_timeout()
+	{
+		var client = ClientThrowing(new TaskCanceledException());
+
+		var failure = Assert.ThrowsAsync<VikunjaException>(() => client.GetOpenTasksAsync(5, CancellationToken.None));
+
+		Assert.That(failure!.Reason, Is.EqualTo(VikunjaFailure.Timeout));
+	}
+
+	[Test]
+	public void The_caller_cancelling_is_not_reported_as_a_timeout()
+	{
+		var client = ClientThrowing(new TaskCanceledException());
+		using var cancelled = new CancellationTokenSource();
+		cancelled.Cancel();
+
+		Assert.ThrowsAsync<TaskCanceledException>(() => client.GetOpenTasksAsync(5, cancelled.Token));
+	}
+
+	private static VikunjaClient ClientThrowing(Exception exception)
+	{
+		var credentials = new VikunjaCredentials();
+		credentials.Apply(new Uri("https://vikunja.test/api/v1/"), "t");
+		return new VikunjaClient(new HttpClient(new ThrowingHandler(exception)), credentials);
+	}
+
+	private sealed class ThrowingHandler(Exception exception) : HttpMessageHandler
+	{
+		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+			=> throw exception;
 	}
 
 	[Test]

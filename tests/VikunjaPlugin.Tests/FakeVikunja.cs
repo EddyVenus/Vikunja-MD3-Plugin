@@ -9,7 +9,7 @@ namespace VikunjaPlugin.Tests;
 /// <summary>A scripted Vikunja: answers from a queue-free route table and records every request it saw.</summary>
 internal sealed class FakeVikunja : HttpMessageHandler
 {
-	public List<(HttpMethod Method, string Path, string Body)> Requests { get; } = [];
+	public List<(HttpMethod Method, string Path, string Body, string? Token)> Requests { get; } = [];
 
 	public Func<HttpMethod, string, HttpResponseMessage> Respond { get; set; } = (_, _) => new(HttpStatusCode.NotFound);
 
@@ -17,7 +17,7 @@ internal sealed class FakeVikunja : HttpMessageHandler
 	{
 		var body = request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken);
 		var path = request.RequestUri!.PathAndQuery;
-		Requests.Add((request.Method, path, body));
+		Requests.Add((request.Method, path, body, request.Headers.Authorization?.Parameter));
 		return Respond(request.Method, path);
 	}
 

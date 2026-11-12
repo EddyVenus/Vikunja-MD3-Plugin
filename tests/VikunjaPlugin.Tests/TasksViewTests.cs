@@ -50,12 +50,29 @@ public sealed class TasksViewTests
 		Assert.That(host.ByText("- B"), Is.Not.Empty);
 	}
 
-	[Test]
-	public void An_empty_list_shows_the_empty_message()
+	[TestCase(StoreStatus.Ready, "Widgets.Empty")]
+	[TestCase(StoreStatus.Loading, "Widgets.Loading")]
+	[TestCase(StoreStatus.NotConfigured, "Widgets.NotConfigured")]
+	[TestCase(StoreStatus.Unavailable, "Widgets.Unavailable")]
+	public void An_empty_tile_says_why_it_is_empty(StoreStatus status, string expectedKey)
 	{
-		var host = UiTestHost.Render(TasksView.Build(StoreWith(), 5, onCheck: null));
+		var store = StoreWith();
+		store.Status.Value = status;
 
-		Assert.That(host.ById("tasks.message"), Is.Not.Null);
+		var host = UiTestHost.Render(TasksView.Build(store, 5, onCheck: null));
+
+		Assert.That(host.Describe(), Does.Contain(expectedKey));
+	}
+
+	[Test]
+	public void The_message_is_hidden_while_tasks_are_listed()
+	{
+		var store = StoreWith("Buy milk");
+		store.Status.Value = StoreStatus.Unavailable;
+
+		var host = UiTestHost.Render(TasksView.Build(store, 5, onCheck: null));
+
+		Assert.That(host.Describe(), Does.Not.Contain("Widgets.Unavailable"));
 	}
 
 	[Test]
