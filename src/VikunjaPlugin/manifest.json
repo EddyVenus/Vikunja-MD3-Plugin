@@ -36,5 +36,10 @@
   "repository": "https://github.com/EddyVenus/Vikunja-MD3-Plugin",
   "compatibility": {
     "macroDeck": ">=3.0.0-0"
+  },
+  "ai": {
+    "interaction": false,
+    "generatedContent": false,
+    "generatedAssets": false
   }
 }
