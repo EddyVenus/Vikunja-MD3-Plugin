@@ -1,0 +1,117 @@
+using System.Net;
+using System.Text.Json;
+using NUnit.Framework;
+using VikunjaPlugin.Api;
+
+namespace VikunjaPlugin.Tests;
+
+[TestFixture]
+public sealed class TaskStoreTests
+{
+	private static readonly string[] ExpectedTitles = ["Buy milk", "Call Ana"];
+	private static readonly long[] RemainingIds = [2];
+	private const string TwoTasks = """[{"id":1,"title":"Buy milk","done":false},{"id":2,"title":"Call Ana","done":false}]""";
+
+	[Test]
+	public async Task Refresh_loads_only_open_tasks_from_the_api()
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var store = fake.CreateStore(out _);
+
+		await store.RefreshAsync(CancellationToken.None);
+
+		Assert.That(store.Tasks.Peek().Select(t => t.Title), Is.EqualTo(ExpectedTitles));
+		Assert.That(fake.Requests[0].Path, Does.Contain("done%20%3D%20false"));
+	}
+
+	[Test]
+	public async Task Refresh_without_configuration_clears_the_tasks_and_calls_nothing()
+	{
+		var fake = new FakeVikunja();
+		var store = fake.CreateStore(out _, configured: false);
+
+		await store.RefreshAsync(CancellationToken.None);
+
+		Assert.That(store.Tasks.Peek(), Is.Empty);
+		Assert.That(fake.Requests, Is.Empty);
+	}
+
+	[Test]
+	public async Task A_failed_refresh_keeps_the_tasks_already_shown()
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var store = fake.CreateStore(out _);
+		await store.RefreshAsync(CancellationToken.None);
+
+		fake.Respond = (_, _) => new HttpResponseMessage(HttpStatusCode.InternalServerError);
+		await store.RefreshAsync(CancellationToken.None);
+
+		Assert.That(store.Tasks.Peek(), Has.Count.EqualTo(2));
+	}
+
+	[Test]
+	public async Task Completing_sends_the_whole_task_back_with_done_set_and_removes_it()
+	{
+		var fake = new FakeVikunja
+		{
+			Respond = (method, path) => method == HttpMethod.Get && path.Contains("tasks/1")
+				? FakeVikunja.Json("""{"id":1,"title":"Buy milk","done":false,"description":"2 liters"}""")
+				: method == HttpMethod.Get
+					? FakeVikunja.Json(TwoTasks)
+					: FakeVikunja.Json("""{"id":1,"done":true}"""),
+		};
+		var store = fake.CreateStore(out _);
+		await store.RefreshAsync(CancellationToken.None);
+
+		await store.CompleteAsync(1, CancellationToken.None);
+
+		var post = fake.Requests.Single(r => r.Method == HttpMethod.Post);
+		using var body = JsonDocument.Parse(post.Body);
+		Assert.That(post.Path, Does.EndWith("/tasks/1"));
+		Assert.That(body.RootElement.GetProperty("done").GetBoolean(), Is.True);
+		Assert.That(body.RootElement.GetProperty("description").GetString(), Is.EqualTo("2 liters"));
+		Assert.That(store.Tasks.Peek().Select(t => t.Id), Is.EqualTo(RemainingIds));
+	}
+
+	[Test]
+	public async Task Completing_keeps_the_task_and_reports_when_the_token_is_rejected()
+	{
+		var fake = new FakeVikunja
+		{
+			Respond = (method, path) => method == HttpMethod.Get && !path.Contains("tasks/")
+				? FakeVikunja.Json(TwoTasks)
+				: new HttpResponseMessage(HttpStatusCode.Unauthorized),
+		};
+		var store = fake.CreateStore(out _);
+		await store.RefreshAsync(CancellationToken.None);
+
+		var failure = Assert.ThrowsAsync<VikunjaException>(() => store.CompleteAsync(1, CancellationToken.None));
+
+		Assert.That(failure!.Reason, Is.EqualTo(VikunjaFailure.Unauthorized));
+		Assert.That(store.Tasks.Peek(), Has.Count.EqualTo(2));
+	}
+
+	[Test]
+	public async Task The_token_is_sent_as_a_bearer_header()
+	{
+		string? header = null;
+		var fake = new FakeVikunja();
+		fake.Respond = (_, _) => FakeVikunja.Json("[]");
+		var client = new HttpClient(new HeaderSpy(fake, value => header = value));
+		var credentials = new VikunjaCredentials();
+		credentials.Apply(new Uri("https://vikunja.test/api/v1/"), "secret-token");
+
+		await new VikunjaClient(client, credentials).GetOpenTasksAsync(5, CancellationToken.None);
+
+		Assert.That(header, Is.EqualTo("Bearer secret-token"));
+	}
+
+	private sealed class HeaderSpy(HttpMessageHandler inner, Action<string?> capture) : DelegatingHandler(inner)
+	{
+		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+		{
+			capture(request.Headers.Authorization?.ToString());
+			return base.SendAsync(request, cancellationToken);
+		}
+	}
+}
