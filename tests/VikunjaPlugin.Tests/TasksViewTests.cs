@@ -21,8 +21,8 @@ public sealed class TasksViewTests
 	{
 		var host = UiTestHost.Render(TasksView.Build(StoreWith("Buy milk", "Call Ana"), 5, onCheck: null));
 
-		Assert.That(host.ByText("- Buy milk"), Is.Not.Empty);
-		Assert.That(host.ByText("- Call Ana"), Is.Not.Empty);
+		Assert.That(host.ByText("Buy milk"), Is.Not.Empty);
+		Assert.That(host.ByText("Call Ana"), Is.Not.Empty);
 		Assert.That(host.ByType("ui.button"), Is.Empty);
 	}
 
@@ -46,8 +46,8 @@ public sealed class TasksViewTests
 	{
 		var host = UiTestHost.Render(TasksView.Build(StoreWith("A", "B", "C"), 2, onCheck: null));
 
-		Assert.That(host.ByText("- C"), Is.Empty);
-		Assert.That(host.ByText("- B"), Is.Not.Empty);
+		Assert.That(host.ByText("C"), Is.Empty);
+		Assert.That(host.ByText("B"), Is.Not.Empty);
 	}
 
 	[TestCase(StoreStatus.Ready, "Widgets.Empty")]
@@ -83,6 +83,6 @@ public sealed class TasksViewTests
 
 		store.Tasks.Value = store.Tasks.Peek().Where(t => t.Id != 1).ToList();
 
-		Assert.That(host.ByText("- Buy milk"), Is.Empty);
+		Assert.That(host.ByText("Buy milk"), Is.Empty);
 	}
 }

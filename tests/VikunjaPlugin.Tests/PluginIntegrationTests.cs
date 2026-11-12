@@ -22,8 +22,8 @@ public sealed class PluginIntegrationTests
 	[TestCase("""{"maxTasks":3}""", 3)]
 	[TestCase("""{"maxTasks":0}""", 1)]
 	[TestCase("""{"maxTasks":9999}""", 50)]
-	[TestCase("""{}""", 5)]
-	[TestCase("""{"maxTasks":"many"}""", 5)]
+	[TestCase("""{}""", 50)]
+	[TestCase("""{"maxTasks":"many"}""", 50)]
 	public void Max_tasks_is_read_from_widget_data_and_clamped(string json, int expected)
 	{
 		using var document = JsonDocument.Parse(json);
@@ -32,9 +32,9 @@ public sealed class PluginIntegrationTests
 	}
 
 	[Test]
-	public void Missing_widget_data_falls_back_to_the_default_count()
+	public void Missing_widget_data_means_no_cap_beyond_what_the_tile_fits()
 	{
-		Assert.That(PluginIntegration.MaxTasks(default), Is.EqualTo(5));
+		Assert.That(PluginIntegration.MaxTasks(default), Is.EqualTo(50));
 	}
 }
 
