@@ -18,8 +18,7 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 	internal const string ChecklistWidgetId = "tasks-checklist";
 
 	private const string WidgetSchema = """{"type":"object","properties":{"maxTasks":{"type":"integer","minimum":1}}}""";
-	private const string WidgetDefaultData = """{"maxTasks":5}""";
-	private const int DefaultMaxTasks = 5;
+	private const string WidgetDefaultData = "{}";
 
 	private readonly VikunjaClient _client;
 	private readonly VikunjaCredentials _credentials;
@@ -134,5 +133,5 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 			&& value.ValueKind == JsonValueKind.Number
 			&& value.TryGetInt32(out var count)
 				? Math.Clamp(count, 1, TaskStore.MaxTasks)
-				: DefaultMaxTasks;
+				: TaskStore.MaxTasks;
 }
