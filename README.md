@@ -2,6 +2,8 @@
 
 Show your open [Vikunja](https://vikunja.io) tasks on a Macro Deck widget and mark them as done from the deck.
 
+**Platform:** Windows (x64) only for now. macOS and Linux are not built or tested.
+
 ## Widgets
 
 | Widget | Behavior |

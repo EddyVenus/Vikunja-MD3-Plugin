@@ -3,26 +3,12 @@
   "manifestVersion": 1,
   "id": "com.eddyvenus.vikunja",
   "name": "Vikunja Tasks",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "Show your Vikunja tasks in a Macro Deck widget and check them off.",
   "icon": "Assets/icon.svg",
   "entrypoints": {
     "win-x64": {
       "executable": "runtimes/win-x64/VikunjaPlugin.dll",
-      "runtime": {
-        "kind": "FrameworkDependent",
-        "dotnetVersion": "10.0"
-      }
-    },
-    "osx-arm64": {
-      "executable": "runtimes/osx-arm64/VikunjaPlugin.dll",
-      "runtime": {
-        "kind": "FrameworkDependent",
-        "dotnetVersion": "10.0"
-      }
-    },
-    "linux-x64": {
-      "executable": "runtimes/linux-x64/VikunjaPlugin.dll",
       "runtime": {
         "kind": "FrameworkDependent",
         "dotnetVersion": "10.0"

@@ -10,6 +10,7 @@
 *.ipr
 *.iws
 .claude/
+.specify/
 .gemini/
 .agents/
 .playwright-mcp/

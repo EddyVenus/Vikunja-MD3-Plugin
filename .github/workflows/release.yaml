@@ -6,7 +6,9 @@ on:
 
 jobs:
   publish:
-    uses: Macro-Deck-App/GitHub-Actions/.github/workflows/publish-plugin.yml@ea21da166e806a90f60836318527e0aca459064e # v1
+    # A GitHub release starts a Store upload and burns its version number, so betas are published as prereleases and skipped here.
+    if: ${{ !github.event.release.prerelease }}
+    uses: Macro-Deck-App/GitHub-Actions/.github/workflows/publish-plugin.yml@v1
     permissions:
       contents: read
       id-token: write
