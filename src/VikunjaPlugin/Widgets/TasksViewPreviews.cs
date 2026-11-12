@@ -35,6 +35,12 @@ internal static class TasksViewPreviews
 	[UiPreview("Counter on squares", Profile = UiPreviewProfiles.Widget)]
 	public static UiElement Counter() => TasksView.Build(StoreWith(_titles), WidgetSettings.Default with { SquareCounter = true }, onCheck: null);
 
+	[UiPreview("Offline", Profile = UiPreviewProfiles.Widget)]
+	public static UiElement Offline() => TasksView.Build(StoreWith(_titles, StoreStatus.Unavailable), WidgetSettings.Default, onCheck: null);
+
+	[UiPreview("Offline counter", Profile = UiPreviewProfiles.Widget)]
+	public static UiElement OfflineCounter() => TasksView.Build(StoreWith(_titles, StoreStatus.Unavailable), WidgetSettings.Default with { SquareCounter = true }, onCheck: null);
+
 	[UiPreview("Few tasks", Profile = UiPreviewProfiles.Widget)]
 	public static UiElement FewTasks() => TasksView.Build(StoreWith(_titles[..2]), WidgetSettings.Default, onCheck: null);
 

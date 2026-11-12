@@ -6,4 +6,5 @@ public enum StoreStatus
 	Ready,
 	NotConfigured,
 	Unavailable,
+	Unauthorized,
 }

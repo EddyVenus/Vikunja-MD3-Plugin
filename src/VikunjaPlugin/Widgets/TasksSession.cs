@@ -11,12 +11,16 @@ namespace VikunjaPlugin.Widgets;
 internal sealed class TasksSession : IUiSession
 {
 	private readonly UiView _view;
+
+	/// <summary>Whether pressing a task completes it; false for read-only widgets and the editor preview.</summary>
+	internal bool Checkable { get; }
 	private readonly TaskStore _store;
 	private IUiEventOrigin? _origin;
 
 	public TasksSession(UiSurface surface, TaskStore store, WidgetSettings settings, bool checkable)
 	{
 		_store = store;
+		Checkable = checkable;
 		_view = new UiView(surface, TasksView.Build(store, settings, checkable ? CompleteAsync : null));
 		_view.Changed += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
 		_view.HandlerFaulted += (_, fault)

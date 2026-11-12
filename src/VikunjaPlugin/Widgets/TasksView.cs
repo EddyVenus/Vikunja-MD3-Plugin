@@ -18,6 +18,10 @@ internal static class TasksView
 	private const string LateColor = "#ff5a5f";
 	private const string Transparent = "#00000000";
 
+	// Shown instead of a quiet failure: dimmed content and an orange mark say Vikunja could not be reached.
+	private const string WarningColor = "#ff9f0a";
+	private const double StaleOpacity = 0.4;
+
 	// A press target is drawn in a button, whose text comes out about a tenth taller than a plain row.
 	private const double ButtonRowFactor = 1.1;
 
@@ -70,6 +74,7 @@ internal static class TasksView
 				Message("loading", store, StoreStatus.Loading, Strings.Widgets.Loading(), layout),
 				Message("not-configured", store, StoreStatus.NotConfigured, Strings.Widgets.NotConfigured(), layout),
 				Message("unavailable", store, StoreStatus.Unavailable, Strings.Widgets.Unavailable(), layout),
+				Message("unauthorized", store, StoreStatus.Unauthorized, Strings.Errors.Unauthorized(), layout),
 				new UiResponsive
 				{
 					Key = "list",
@@ -99,7 +104,7 @@ internal static class TasksView
 			children.Add(Header(store, layout, page, count));
 		}
 
-		children.Add(new UiRepeat<VikunjaTask>
+		var repeat = new UiRepeat<VikunjaTask>
 		{
 			Key = "rows",
 			Items = UiValue.From<IReadOnlyList<VikunjaTask>>(() =>
@@ -111,7 +116,9 @@ internal static class TasksView
 			// The day is part of the key, so a new day gives new rows with fresh "Today" and "Overdue" labels.
 			KeySelector = task => FormattableString.Invariant($"{task.Id}-{store.Today.Peek().DayNumber}"),
 			Template = (task, rowKey) => Row(task, rowKey, layout, onCheck, due, store.Today.Peek()),
-		});
+		};
+
+		children.Add(Dimmed(store, new UiStack { Key = "items", Align = UiValue.Of(UiComponentAlignments.Stretch), Gap = layout.Gap, Children = [repeat] }));
 
 		// A swipe only registers over the rows, so the page is turned from where the list is drawn.
 		return new UiModifier
@@ -181,26 +188,63 @@ internal static class TasksView
 			Gap = layout.Gap,
 			Children =
 			[
-				new UiTextRun
+				Warning(store, layout.TextSize * 2),
+				Dimmed(store, new UiStack
 				{
-					Key = "number",
-					// The store keeps at most TaskStore.MaxTasks tasks, so the count stops there.
-					Text = UiText.From(() => store.Tasks.Value.Count.ToString(CultureInfo.InvariantCulture)),
-					Size = layout.TextSize * 5,
-					MinSize = layout.TextSize * 2,
-					Weight = UiValue.Of(UiComponentTextWeights.Bold),
+					Key = "figures",
+					Justify = UiValue.Of(UiComponentJustify.Center),
 					Align = UiValue.Of(UiComponentAlignments.Center),
-				},
-				new UiTextRun
-				{
-					Key = "label",
-					Text = Strings.Widgets.OpenTasks(),
-					Size = layout.TextSize * 1.05,
-					MinSize = layout.TextSize * 0.6,
-					Align = UiValue.Of(UiComponentAlignments.Center),
-					Role = UiComponentTextRoles.Secondary,
-				},
+					Gap = layout.Gap,
+					Children =
+					[
+						new UiTextRun
+						{
+							Key = "number",
+							// The store keeps at most TaskStore.MaxTasks tasks, so the count stops there.
+							Text = UiText.From(() => store.Tasks.Value.Count.ToString(CultureInfo.InvariantCulture)),
+							Size = layout.TextSize * 5,
+							MinSize = layout.TextSize * 2,
+							Weight = UiValue.Of(UiComponentTextWeights.Bold),
+							Align = UiValue.Of(UiComponentAlignments.Center),
+						},
+						new UiTextRun
+						{
+							Key = "label",
+							Text = Strings.Widgets.OpenTasks(),
+							Size = layout.TextSize * 1.05,
+							MinSize = layout.TextSize * 0.6,
+							Align = UiValue.Of(UiComponentAlignments.Center),
+							Role = UiComponentTextRoles.Secondary,
+						},
+					],
+				}),
 			],
+		},
+	};
+
+	private static bool IsStale(TaskStore store) => store.Status.Value is StoreStatus.Unavailable or StoreStatus.Unauthorized;
+
+	/// <summary>Draws the tasks faded while they could not be refreshed, so they do not pass for current.</summary>
+	private static UiModifier Dimmed(TaskStore store, UiElement child) => new()
+	{
+		Key = "dim",
+		Opacity = UiValue.From(() => IsStale(store) ? StaleOpacity : 1.0),
+		Child = child,
+	};
+
+	/// <summary>A bold orange "!" shown only while Vikunja cannot be reached.</summary>
+	private static UiWhen Warning(TaskStore store, double size) => new()
+	{
+		Key = "warning",
+		Condition = () => IsStale(store),
+		Content = () => new UiTextRun
+		{
+			Key = "mark",
+			Text = "!",
+			Size = size,
+			Weight = UiValue.Of(UiComponentTextWeights.Bold),
+			Color = UiValue.Of(WarningColor),
+			Align = UiValue.Of(UiComponentAlignments.Center),
 		},
 	};
 
@@ -213,20 +257,31 @@ internal static class TasksView
 		Children =
 		[
 			new UiTextRun { Key = "title", Text = Strings.Widgets.Header(), Size = layout.HeaderSize, Role = UiComponentTextRoles.Secondary },
-			new UiTextRun
+			new UiStack
 			{
-				Key = "count",
-				// Shows "page/pages" once there is more than one page, and the open count otherwise.
-				Text = UiText.From(() =>
-				{
-					var total = store.Tasks.Value.Count;
-					var pages = PageCount(total, perPage);
-					return pages > 1
-						? $"{CurrentPage(page.Value, total, perPage) + 1}/{pages}"
-						: total.ToString(CultureInfo.InvariantCulture);
-				}),
-				Size = layout.HeaderSize,
-				Role = UiComponentTextRoles.Secondary,
+				Key = "status",
+				Direction = UiValue.Of(UiComponentDirections.Horizontal),
+				Align = UiValue.Of(UiComponentAlignments.Baseline),
+				Gap = layout.Gap,
+				Children =
+				[
+					Warning(store, layout.HeaderSize * 1.4),
+					new UiTextRun
+					{
+						Key = "count",
+						// Shows "page/pages" once there is more than one page, and the open count otherwise.
+						Text = UiText.From(() =>
+						{
+							var total = store.Tasks.Value.Count;
+							var pages = PageCount(total, perPage);
+							return pages > 1
+								? $"{CurrentPage(page.Value, total, perPage) + 1}/{pages}"
+								: total.ToString(CultureInfo.InvariantCulture);
+						}),
+						Size = layout.HeaderSize,
+						Role = UiComponentTextRoles.Secondary,
+					},
+				],
 			},
 		],
 	};

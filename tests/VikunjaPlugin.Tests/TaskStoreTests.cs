@@ -155,7 +155,7 @@ public sealed class TaskStoreTests
 	}
 
 	[Test]
-	public async Task Status_tells_apart_ready_unavailable_and_not_configured()
+	public async Task Status_tells_apart_ready_unavailable_unauthorized_and_not_configured()
 	{
 		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
 		var store = fake.CreateStore(out var credentials);
@@ -164,9 +164,13 @@ public sealed class TaskStoreTests
 		await store.RefreshAsync(CancellationToken.None);
 		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.Ready));
 
-		fake.Respond = (_, _) => new HttpResponseMessage(HttpStatusCode.Unauthorized);
+		fake.Respond = (_, _) => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
 		await store.RefreshAsync(CancellationToken.None);
 		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.Unavailable));
+
+		fake.Respond = (_, _) => new HttpResponseMessage(HttpStatusCode.Unauthorized);
+		await store.RefreshAsync(CancellationToken.None);
+		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.Unauthorized));
 
 		credentials.Clear();
 		await store.RefreshAsync(CancellationToken.None);

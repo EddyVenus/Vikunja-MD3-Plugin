@@ -100,8 +100,8 @@ public sealed class TaskStore(VikunjaClient client, ILogger logger) : Background
 		}
 		catch (VikunjaException exception)
 		{
-			// Stale tasks stay on screen so a failed refresh never looks like an empty list.
-			Status.Value = StoreStatus.Unavailable;
+			// Stale tasks stay on screen so a failed refresh never looks like an empty list; the status marks them as old.
+			Status.Value = exception.Reason == VikunjaFailure.Unauthorized ? StoreStatus.Unauthorized : StoreStatus.Unavailable;
 			var signal = _failures.RecordFailure(exception.Reason.ToString());
 			if (signal.Kind != FailureEpisodeSignalKind.Quiet)
 			{

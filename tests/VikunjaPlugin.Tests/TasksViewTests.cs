@@ -183,4 +183,33 @@ public sealed class TasksViewTests
 
 		Assert.That(host.Describe(), Is.Not.EqualTo(before));
 	}
+
+	[TestCase(StoreStatus.Unavailable)]
+	[TestCase(StoreStatus.Unauthorized)]
+	public void Old_tasks_still_on_screen_are_dimmed_and_marked_when_they_could_not_be_refreshed(StoreStatus status)
+	{
+		var store = StoreWith("Buy milk");
+		var host = UiTestHost.Render(TasksView.Build(store, WidgetSettings.Default, onCheck: null));
+		var before = host.Describe();
+		Assert.That(host.ByText("!"), Is.Empty);
+
+		store.Status.Value = status;
+
+		Assert.That(host.ByText("!"), Is.Not.Empty);
+		Assert.That(host.Describe(), Is.Not.EqualTo(before));
+
+		store.Status.Value = StoreStatus.Ready;
+		Assert.That(host.ByText("!"), Is.Empty);
+	}
+
+	[Test]
+	public void The_counter_tile_is_marked_too()
+	{
+		var store = StoreWith("A", "B");
+		var host = UiTestHost.Render(TasksView.Build(store, WidgetSettings.Default with { SquareCounter = true }, onCheck: null));
+
+		store.Status.Value = StoreStatus.Unavailable;
+
+		Assert.That(host.ByText("!"), Is.Not.Empty);
+	}
 }
