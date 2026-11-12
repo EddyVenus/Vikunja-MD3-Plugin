@@ -1,4 +1,4 @@
-# Vikunja for Macro Deck 3
+# Vikunja Tasks for Macro Deck 3
 
 Show your open [Vikunja](https://vikunja.io) tasks on a Macro Deck widget and mark them as done from the deck.
 
@@ -15,7 +15,8 @@ Both widgets show up to `maxTasks` tasks (default 5, at most 50). Change it in t
 { "maxTasks": 8 }
 ```
 
-Tasks are the open ones across every project you can access, ordered by due date. The list refreshes once a minute.
+Tasks are the open ones across every project you can access: dated tasks first, soonest due first, then undated ones. Only the
+first 200 open tasks are read. The list refreshes once a minute.
 A checked task disappears from the tile immediately. A repeating task stays on the list, because Vikunja only moves its
 dates forward. If Vikunja cannot be reached the last known list stays on screen and the failure is
 logged once per episode.

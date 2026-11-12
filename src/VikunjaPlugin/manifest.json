@@ -2,7 +2,7 @@
   "$schema": "https://schemas.macro-deck.app/plugin-manifest-v1.schema.json",
   "manifestVersion": 1,
   "id": "com.eddyvenus.vikunja",
-  "name": "Vikunja",
+  "name": "Vikunja Tasks",
   "version": "1.0.0",
   "description": "Show your Vikunja tasks in a Macro Deck widget and check them off.",
   "icon": "Assets/icon.svg",
@@ -40,6 +40,6 @@
   "ai": {
     "interaction": false,
     "generatedContent": false,
-    "generatedAssets": false
+    "generatedAssets": true
   }
 }
