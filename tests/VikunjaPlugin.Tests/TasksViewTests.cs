@@ -212,4 +212,25 @@ public sealed class TasksViewTests
 
 		Assert.That(host.ByText("!"), Is.Not.Empty);
 	}
+
+	[Test]
+	public void Due_dates_are_worded_as_overdue_today_or_tomorrow_and_undated_tasks_get_no_label()
+	{
+		var now = DateTimeOffset.Now;
+		var store = new FakeVikunja().CreateStore(out _);
+		store.Tasks.Value =
+		[
+			new VikunjaTask(1, "Late", false, now.AddDays(-3)),
+			new VikunjaTask(2, "Now", false, now),
+			new VikunjaTask(3, "Soon", false, now.AddDays(1)),
+			new VikunjaTask(4, "Whenever", false),
+		];
+
+		var description = UiTestHost.Render(TasksView.Build(store, WidgetSettings.Default, onCheck: null)).Describe();
+
+		Assert.That(description, Does.Contain("Widgets.Due.Overdue"));
+		Assert.That(description, Does.Contain("Widgets.Due.Today"));
+		Assert.That(description, Does.Contain("Widgets.Due.Tomorrow"));
+		Assert.That(description.Split("Widgets.Due.").Length - 1, Is.EqualTo(3));
+	}
 }

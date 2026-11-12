@@ -68,4 +68,40 @@ public sealed class ConfigFlowTests
 		Assert.That(result.Kind, Is.EqualTo(ConfigFlowResultKind.Error));
 		Assert.That(fake.Requests, Is.Empty);
 	}
+
+	[TestCase("<html>Sign in</html>")]
+	[TestCase("")]
+	[TestCase("{}")]
+	public async Task An_address_that_answers_but_is_not_vikunja_is_refused_and_nothing_is_stored(string body)
+	{
+		// Another web app, a login page or a proxy can answer 200 to any path; only a task list counts.
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(body) };
+
+		var result = await SubmitAsync(fake, "https://not-vikunja.test", "tk");
+
+		Assert.That(result.Kind, Is.EqualTo(ConfigFlowResultKind.Error));
+		Assert.That(result.Values, Is.Null);
+	}
+
+	[TestCase("null")]
+	[TestCase("[]")]
+	public async Task An_account_with_no_tasks_still_connects(string body)
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(body) };
+
+		var result = await SubmitAsync(fake, "https://vikunja.test", "tk");
+
+		Assert.That(result.Kind, Is.EqualTo(ConfigFlowResultKind.Complete));
+	}
+
+	[Test]
+	public async Task A_server_that_cannot_be_reached_returns_to_the_step_instead_of_failing()
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => throw new HttpRequestException("No such host is known.") };
+
+		var result = await SubmitAsync(fake, "https://typo.vikunja.test", "tk");
+
+		Assert.That(result.Kind, Is.EqualTo(ConfigFlowResultKind.Error));
+		Assert.That(result.Values, Is.Null);
+	}
 }

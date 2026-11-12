@@ -9,6 +9,7 @@ public enum VikunjaFailure
 	Unreachable,
 	Timeout,
 	Rejected,
+	NotVikunja,
 }
 
 public sealed class VikunjaException(VikunjaFailure reason, Exception? inner = null)
@@ -22,6 +23,7 @@ public sealed class VikunjaException(VikunjaFailure reason, Exception? inner = n
 		VikunjaFailure.Unauthorized => Strings.Errors.Unauthorized(),
 		VikunjaFailure.Unreachable => Strings.Errors.Unreachable(),
 		VikunjaFailure.Timeout => Strings.Errors.Timeout(),
+		VikunjaFailure.NotVikunja => Strings.Errors.NotVikunja(),
 		_ => Strings.Errors.Rejected(),
 	};
 }

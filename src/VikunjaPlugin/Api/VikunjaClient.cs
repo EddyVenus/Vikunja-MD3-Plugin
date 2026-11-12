@@ -56,7 +56,8 @@ public sealed class VikunjaClient(HttpClient httpClient, VikunjaCredentials cred
 		// Reads tasks because that is the one permission the plugin needs, so a narrowly scoped token passes.
 		using var message = new HttpRequestMessage(HttpMethod.Get, new Uri(baseAddress, "tasks?per_page=1"));
 		message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-		using var response = await SendCoreAsync(message, cancellationToken);
+		// A success status is not enough: another web app or a login page can answer 200 to any path, so the body must be a task list.
+		await SendAsync<List<VikunjaTask>>(message, cancellationToken);
 	}
 
 	private HttpRequestMessage CreateMessage(HttpMethod method, string path)
@@ -81,7 +82,7 @@ public sealed class VikunjaClient(HttpClient httpClient, VikunjaCredentials cred
 		catch (Exception exception) when (exception is JsonException or NotSupportedException)
 		{
 			// A proxy or login page answering 200 with HTML must not escape as an unhandled exception.
-			throw new VikunjaException(VikunjaFailure.Rejected, exception);
+			throw new VikunjaException(VikunjaFailure.NotVikunja, exception);
 		}
 	}
 
