@@ -47,7 +47,7 @@
     <value>Enter the address of your Vikunja instance and an API token.</value>
   </data>
   <data name="ConfigFlow.TokenInstruction" xml:space="preserve">
-    <value>Create a token in Vikunja under Settings, API Tokens. It needs read and write access to tasks.</value>
+    <value>In Vikunja go to Settings, API Tokens and create a token with only these permissions under Tasks: Read all, Read one and Update.</value>
   </data>
   <data name="ConfigFlow.UnknownStep" xml:space="preserve">
     <value>Unknown configuration step.</value>
