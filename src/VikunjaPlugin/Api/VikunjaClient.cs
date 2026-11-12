@@ -8,13 +8,31 @@ namespace VikunjaPlugin.Api;
 
 public sealed class VikunjaClient(HttpClient httpClient, VikunjaCredentials credentials)
 {
+	private const int PageSize = 50;
+	private const int MaxPages = 4;
+
+	/// <summary>Open tasks with dated ones first, soonest due first. Sorted here because the server's order for undated tasks is database specific.</summary>
 	public async Task<IReadOnlyList<VikunjaTask>> GetOpenTasksAsync(int limit, CancellationToken cancellationToken)
 	{
 		var filter = Uri.EscapeDataString("done = false");
-		using var message = CreateMessage(HttpMethod.Get,
-			$"tasks?filter={filter}&sort_by=due_date&sort_by=id&order_by=asc&order_by=asc&per_page={limit}");
+		var all = new List<VikunjaTask>();
+		for (var page = 1; page <= MaxPages; page++)
+		{
+			using var message = CreateMessage(HttpMethod.Get, $"tasks?filter={filter}&sort_by=id&order_by=asc&per_page={PageSize}&page={page}");
+			var tasks = await SendAsync<List<VikunjaTask>>(message, cancellationToken) ?? [];
+			all.AddRange(tasks);
+			if (tasks.Count < PageSize)
+			{
+				break;
+			}
+		}
 
-		return await SendAsync<List<VikunjaTask>>(message, cancellationToken) ?? [];
+		return all
+			.OrderBy(task => task.HasDueDate ? 0 : 1)
+			.ThenBy(task => task.DueDate)
+			.ThenBy(task => task.Id)
+			.Take(limit)
+			.ToList();
 	}
 
 	/// <summary>Returns whether the task is now done; a repeating task stays open and only moves its dates.</summary>
