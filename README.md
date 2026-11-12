@@ -2,7 +2,16 @@
 
 Show your open [Vikunja](https://vikunja.io) tasks on a Macro Deck widget and mark them as done from the deck.
 
-**Platform:** Windows (x64) only for now. macOS and Linux are not built or tested.
+> **Beta.** This is the first beta (1.0.0-beta.1). Expect rough edges, and please
+> [report problems](#reporting-problems).
+
+## Requirements
+
+- **Macro Deck** 3.0.0 or newer, on Windows (x64). macOS and Linux are not built or tested. Macro Deck provides the .NET
+  runtime, so there is nothing else to install.
+- **Vikunja** 0.24.0 or newer, with API tokens available. Tested with Vikunja 2.4.0. The plugin uses the query-based task
+  filter introduced in 0.24.0.
+- The computer that runs Macro Deck must be able to reach your Vikunja address.
 
 ## Widgets
 
@@ -28,10 +37,20 @@ A checked task disappears from the tile immediately. A repeating task stays on t
 dates forward. If Vikunja cannot be reached the last known list stays on screen and the failure is
 logged once per episode.
 
+## Install
+
+1. Download `com.eddyvenus.vikunja-1.0.0-beta.1.macroDeckPlugin` from the
+   [Releases](https://github.com/EddyVenus/Vikunja-MD3-Plugin/releases) page.
+2. In Macro Deck open the **Integrations** tab and install the downloaded file from there.
+
+Once the plugin is listed in the Macro Deck Store, install it from the Store instead.
+
 ## Setup
 
 1. In Vikunja open Settings, API Tokens and create a token with only these permissions under Tasks: Read all, Read one
-   and Update. The plugin needs nothing else.
+   and Update. The plugin needs nothing else. An expiry date is optional: when it passes, the tiles show "Vikunja
+   rejected the API token" and you create a new token and enter it again. To cut the plugin's access, delete the token
+   in Vikunja.
 2. In Macro Deck add the Vikunja integration and enter the address of your instance (for example
    `https://vikunja.example.com`) and the token. Use `https` unless Vikunja is on your own network. The connection is verified before it is saved.
 3. Add a "Vikunja tasks" widget to a deck.
@@ -48,6 +67,9 @@ sent anywhere else. An `http://` address is accepted for local networks, but the
   between the read and the write is overwritten with the values just read.
 - Only checking is supported. Unchecking, creating and editing tasks are not.
 - The list is shared by all widgets. Per-widget project or filter selection is not available yet.
+- Vikunja behind a login proxy that intercepts API calls (Authelia, Cloudflare Access and similar) is not supported: the
+  API must answer requests that carry the token.
+- At most 200 open tasks are read. A hardware deck cannot change page, because it has no swipe.
 
 ## Development
 
@@ -62,6 +84,12 @@ macrodeck-plugin build --source src/VikunjaPlugin --output ./artifacts
 
 To try it in a real Macro Deck, use the "Macro Deck - Real Host" launch profile. `AGENTS.md` has the rules for changing
 the code and the Store gate every release has to pass.
+
+## Reporting problems
+
+Open an [issue](https://github.com/EddyVenus/Vikunja-MD3-Plugin/issues/new/choose) and say which versions of the plugin,
+Macro Deck and Vikunja you use and what you did. **Remove your server's address and never paste your token** in an
+issue or a log. For a security problem, see [SECURITY.md](SECURITY.md). More in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
