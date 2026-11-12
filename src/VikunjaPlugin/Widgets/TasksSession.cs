@@ -31,13 +31,24 @@ internal sealed class TasksSession : IUiSession
 
 	public IReadOnlyList<UiPatch> DrainPatches() => _view.DrainPatches();
 
-	public void Dispatch(UiEvent uiEvent) => _view.Dispatch(uiEvent);
+	public void Dispatch(UiEvent uiEvent)
+	{
+		_origin = null;
+		_view.Dispatch(uiEvent);
+	}
 
 	// Dispatch is never concurrent for one session, so a handler running inside it reads the right origin.
 	public void Dispatch(UiEvent uiEvent, IUiEventOrigin origin)
 	{
 		_origin = origin;
-		_view.Dispatch(uiEvent);
+		try
+		{
+			_view.Dispatch(uiEvent);
+		}
+		finally
+		{
+			_origin = null;
+		}
 	}
 
 	public ValueTask DisposeAsync()

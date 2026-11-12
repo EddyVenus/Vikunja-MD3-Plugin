@@ -15,8 +15,9 @@ Both widgets show up to `maxTasks` tasks (default 5, at most 50). Change it in t
 { "maxTasks": 8 }
 ```
 
-Tasks are the open ones across every project you can access, ordered by due date. The list refreshes once a minute
-and right after you check a task. If Vikunja cannot be reached the last known list stays on screen and the failure is
+Tasks are the open ones across every project you can access, ordered by due date. The list refreshes once a minute.
+A checked task disappears from the tile immediately. A repeating task stays on the list, because Vikunja only moves its
+dates forward. If Vikunja cannot be reached the last known list stays on screen and the failure is
 logged once per episode.
 
 ## Setup
@@ -30,7 +31,7 @@ logged once per episode.
 
 The plugin only talks to the Vikunja instance you configure. It sends the API token as a bearer header and reads and
 updates your tasks there. The token is stored in Macro Deck's encrypted secret store and is never logged. Nothing is
-sent anywhere else.
+sent anywhere else. An `http://` address is accepted for local networks, but then the token travels unencrypted.
 
 ## Limitations
 

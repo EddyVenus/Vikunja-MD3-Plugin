@@ -92,6 +92,36 @@ public sealed class TaskStoreTests
 	}
 
 	[Test]
+	public async Task A_repeating_task_stays_listed_because_vikunja_keeps_it_open()
+	{
+		var fake = new FakeVikunja
+		{
+			Respond = (method, path) => method == HttpMethod.Post
+				? FakeVikunja.Json("""{"id":1,"done":false}""")
+				: path.Contains("/tasks/1")
+					? FakeVikunja.Json("""{"id":1,"title":"Buy milk","done":false}""")
+					: FakeVikunja.Json(TwoTasks),
+		};
+		var store = fake.CreateStore(out _);
+		await store.RefreshAsync(CancellationToken.None);
+
+		await store.CompleteAsync(1, CancellationToken.None);
+
+		Assert.That(store.Tasks.Peek().Select(t => t.Id), Does.Contain(1L));
+	}
+
+	[Test]
+	public async Task A_non_json_answer_is_a_rejection_not_a_crash()
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json("<html>login</html>") };
+		var store = fake.CreateStore(out _);
+
+		Assert.DoesNotThrowAsync(() => store.RefreshAsync(CancellationToken.None));
+		var failure = Assert.ThrowsAsync<VikunjaException>(() => store.CompleteAsync(1, CancellationToken.None));
+		Assert.That(failure!.Reason, Is.EqualTo(VikunjaFailure.Rejected));
+	}
+
+	[Test]
 	public async Task The_token_is_sent_as_a_bearer_header()
 	{
 		string? header = null;

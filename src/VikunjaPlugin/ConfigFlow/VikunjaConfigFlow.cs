@@ -32,7 +32,7 @@ internal sealed class VikunjaConfigFlow(VikunjaClient client) : IConfigFlow
 				MacroDeckStrings.Validation.InvalidUrl(Strings.ConfigFlow.ServerUrl.Label()));
 		}
 
-		if (input.GetValueOrDefault(TokenKey) is not string { Length: > 0 } token)
+		if (input.GetValueOrDefault(TokenKey) is not string rawToken || rawToken.Trim() is not { Length: > 0 } token)
 		{
 			return FieldError(TokenKey,
 				MacroDeckStrings.Validation.Required(Strings.ConfigFlow.Token.Label()));

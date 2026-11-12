@@ -15,10 +15,25 @@ public sealed class TaskStore(VikunjaClient client, ILogger logger) : Background
 
 	private readonly ILogger _logger = logger.ForContext<TaskStore>();
 	private readonly FailureEpisodeTracker _failures = new();
+	private readonly SemaphoreSlim _gate = new(1, 1);
 
 	public UiState<IReadOnlyList<VikunjaTask>> Tasks { get; } = new([]);
 
 	public async Task RefreshAsync(CancellationToken cancellationToken)
+	{
+		// Serialized with CompleteAsync so a refresh that started before a press cannot bring the task back.
+		await _gate.WaitAsync(cancellationToken);
+		try
+		{
+			await RefreshCoreAsync(cancellationToken);
+		}
+		finally
+		{
+			_gate.Release();
+		}
+	}
+
+	private async Task RefreshCoreAsync(CancellationToken cancellationToken)
 	{
 		try
 		{
@@ -45,8 +60,21 @@ public sealed class TaskStore(VikunjaClient client, ILogger logger) : Background
 
 	public async Task CompleteAsync(long taskId, CancellationToken cancellationToken)
 	{
-		await client.CompleteTaskAsync(taskId, cancellationToken);
-		Tasks.Value = Tasks.Peek().Where(task => task.Id != taskId).ToList();
+		await _gate.WaitAsync(cancellationToken);
+		try
+		{
+			if (await client.CompleteTaskAsync(taskId, cancellationToken))
+			{
+				Tasks.Value = Tasks.Peek().Where(task => task.Id != taskId).ToList();
+				return;
+			}
+
+			await RefreshCoreAsync(cancellationToken);
+		}
+		finally
+		{
+			_gate.Release();
+		}
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)

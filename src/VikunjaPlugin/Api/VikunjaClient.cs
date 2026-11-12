@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace VikunjaPlugin.Api;
@@ -16,7 +17,8 @@ public sealed class VikunjaClient(HttpClient httpClient, VikunjaCredentials cred
 		return await SendAsync<List<VikunjaTask>>(message, cancellationToken) ?? [];
 	}
 
-	public async Task CompleteTaskAsync(long taskId, CancellationToken cancellationToken)
+	/// <summary>Returns whether the task is now done; a repeating task stays open and only moves its dates.</summary>
+	public async Task<bool> CompleteTaskAsync(long taskId, CancellationToken cancellationToken)
 	{
 		// Vikunja resets every field missing from an update, so the whole task is sent back with done set.
 		using var get = CreateMessage(HttpMethod.Get, $"tasks/{taskId}");
@@ -26,13 +28,15 @@ public sealed class VikunjaClient(HttpClient httpClient, VikunjaCredentials cred
 
 		using var post = CreateMessage(HttpMethod.Post, $"tasks/{taskId}");
 		post.Content = JsonContent.Create(task);
-		using var response = await SendCoreAsync(post, cancellationToken);
+		var updated = await SendAsync<JsonObject>(post, cancellationToken);
+		return updated?["done"]?.GetValue<bool>() ?? false;
 	}
 
 	/// <summary>Takes the values explicitly so the config flow can check what the user typed before applying it.</summary>
 	public async Task VerifyAsync(Uri baseAddress, string token, CancellationToken cancellationToken)
 	{
-		using var message = new HttpRequestMessage(HttpMethod.Get, new Uri(baseAddress, "user"));
+		// Reads tasks because that is the one permission the plugin needs, so a narrowly scoped token passes.
+		using var message = new HttpRequestMessage(HttpMethod.Get, new Uri(baseAddress, "tasks?per_page=1"));
 		message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 		using var response = await SendCoreAsync(message, cancellationToken);
 	}
@@ -52,7 +56,15 @@ public sealed class VikunjaClient(HttpClient httpClient, VikunjaCredentials cred
 	private async Task<T?> SendAsync<T>(HttpRequestMessage message, CancellationToken cancellationToken)
 	{
 		using var response = await SendCoreAsync(message, cancellationToken);
-		return await response.Content.ReadFromJsonAsync<T>(cancellationToken);
+		try
+		{
+			return await response.Content.ReadFromJsonAsync<T>(cancellationToken);
+		}
+		catch (Exception exception) when (exception is JsonException or NotSupportedException)
+		{
+			// A proxy or login page answering 200 with HTML must not escape as an unhandled exception.
+			throw new VikunjaException(VikunjaFailure.Rejected, exception);
+		}
 	}
 
 	private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage message, CancellationToken cancellationToken)
