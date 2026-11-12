@@ -123,4 +123,41 @@ public sealed class TasksViewTests
 
 		Assert.That(huge.RowsThatFit(0.5), Is.EqualTo(1));
 	}
+
+	[Test]
+	public void A_header_costs_one_row_in_tall_tiles()
+	{
+		var layout = new TasksView.RowLayout(WidgetSettings.Default, pressable: false);
+
+		Assert.That(layout.RowsThatFit(2.5, header: true), Is.LessThanOrEqualTo(layout.RowsThatFit(2.5)));
+	}
+
+	[TestCase(0, "#6b7078")]
+	[TestCase(1, "#51cf66")]
+	[TestCase(2, "#ffa94d")]
+	[TestCase(3, "#ff5a5f")]
+	[TestCase(5, "#ff5a5f")]
+	public void Priority_picks_a_color(int priority, string color)
+	{
+		Assert.That(TasksView.PriorityColor(priority), Is.EqualTo(color));
+	}
+
+	[Test]
+	public void A_task_is_overdue_only_when_it_has_a_past_due_date()
+	{
+		Assert.That(TasksView.IsOverdue(new VikunjaTask(1, "a", false, DateTimeOffset.Now.AddDays(-2))), Is.True);
+		Assert.That(TasksView.IsOverdue(new VikunjaTask(1, "a", false, DateTimeOffset.Now.AddDays(2))), Is.False);
+		Assert.That(TasksView.IsOverdue(new VikunjaTask(1, "a", false, DateTimeOffset.MinValue)), Is.False);
+		Assert.That(TasksView.IsOverdue(new VikunjaTask(1, "a", false)), Is.False);
+	}
+
+	[Test]
+	public void The_counter_option_adds_a_square_layout_showing_the_open_count()
+	{
+		var counter = UiTestHost.Render(TasksView.Build(StoreWith("A", "B", "C"), WidgetSettings.Default with { SquareCounter = true }, onCheck: null));
+		var list = UiTestHost.Render(TasksView.Build(StoreWith("A", "B", "C"), WidgetSettings.Default, onCheck: null));
+
+		Assert.That(counter.Describe(), Does.Contain("Widgets.OpenTasks"));
+		Assert.That(list.Describe(), Does.Not.Contain("Widgets.OpenTasks"));
+	}
 }

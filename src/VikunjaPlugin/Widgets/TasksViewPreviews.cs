@@ -32,6 +32,9 @@ internal static class TasksViewPreviews
 	[UiPreview("Slim cards", Profile = UiPreviewProfiles.Widget)]
 	public static UiElement SlimCards() => TasksView.Build(StoreWith(_titles), WidgetSettings.Default with { FontScale = 0.8, CardScale = 0.5 }, onCheck: null);
 
+	[UiPreview("Counter on squares", Profile = UiPreviewProfiles.Widget)]
+	public static UiElement Counter() => TasksView.Build(StoreWith(_titles), WidgetSettings.Default with { SquareCounter = true }, onCheck: null);
+
 	[UiPreview("Few tasks", Profile = UiPreviewProfiles.Widget)]
 	public static UiElement FewTasks() => TasksView.Build(StoreWith(_titles[..2]), WidgetSettings.Default, onCheck: null);
 
@@ -44,7 +47,12 @@ internal static class TasksViewPreviews
 	private static TaskStore StoreWith(string[] titles, StoreStatus status = StoreStatus.Ready)
 	{
 		var store = new TaskStore(new VikunjaClient(new HttpClient(), new VikunjaCredentials()), Serilog.Core.Logger.None);
-		store.Tasks.Value = titles.Select((title, index) => new VikunjaTask(index + 1, title, false)).ToList();
+		store.Tasks.Value = titles.Select((title, index) => new VikunjaTask(
+			index + 1,
+			title,
+			false,
+			index % 3 == 2 ? null : DateTimeOffset.Now.AddDays(index - 1),
+			index % 4)).ToList();
 		store.Status.Value = status;
 		return store;
 	}

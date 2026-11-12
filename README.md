@@ -15,6 +15,7 @@ Open the widget's settings in Macro Deck to change:
 - **Text size (%)**: 50 to 200, default 100.
 - **Card size (%)**: 50 to 200, default 100. Scales the padding and spacing of each task card.
 - **Maximum tasks**: an upper limit, 1 to 50. The tile never draws more rows than fit.
+- **Square tiles show**: List (default) or Counter. A square tile (1x1, 2x2...) can show only how many tasks are open; other shapes always show the list.
 
 Tasks are the open ones across every project you can access: dated tasks first, soonest due first, then undated ones. Only the
 first 200 open tasks are read. The list refreshes once a minute.

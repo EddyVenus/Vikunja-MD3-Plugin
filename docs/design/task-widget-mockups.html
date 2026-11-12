@@ -223,7 +223,13 @@ function bars(d, check) {
 	return `<div class="stack">${rows}</div>`;
 }
 
+/* ---------- F: B everywhere, C on the 1x1 ---------- */
+const countOnly = () => `<div class="stack" style="justify-content:center;align-items:center;text-align:center;gap:3cqmin">
+	<div class="big" style="font-size:44cqmin">${TOTAL_OPEN}</div><div class="muted" style="font-size:9cqmin">open tasks</div></div>`;
+const merged = (d, check) => (d.cols === 1 && d.rows === 1 && d.mode !== "list" ? countOnly() : minimal(d, check));
+
 const DESIGNS = [
+	{ id: "F", name: "F. Minimal list, with a 1x1 setting", text: "Design B at 2x1, 1x2, 2x2 and 4x2. The widget configuration gets a \"1x1 display\" option with two choices, shown below as the two 1x1 tiles: Counter (only the open-task count, centered) or List (the same list as bigger tiles, fewer rows, no due dates). It only affects 1x1 tiles.", draw: merged, sizes: [[1, 1, "counter"], [1, 1, "list"], [2, 1], [1, 2], [2, 2], [4, 2]] },
 	{ id: "A", name: "A. Cards (current look)", text: "What the plugin draws today: one rounded card per task. Pressable cards use the standard Macro Deck button style.", draw: cards },
 	{ id: "B", name: "B. Minimal list", text: "Lighter than cards: thin dividers, a priority dot (read only) or an empty circle (checklist), due dates when the tile is wide, and a small header when it is tall.", draw: minimal },
 	{ id: "C", name: "C. Counter + next task", text: "Leads with how many tasks are open. On a 1x1 it shows only the count and the next task, which is the useful part of a tile that small.", draw: counter },
@@ -231,9 +237,9 @@ const DESIGNS = [
 	{ id: "E", name: "E. Priority bars", text: "A colored bar at the left edge shows priority, a due label appears when the tile is wide, and the checklist version puts a checkbox on the right.", draw: bars },
 ];
 
-function tile(draw, cols, rows, check) {
-	const d = dims(cols, rows);
-	return `<figure><div class="tile" style="width:${d.w}px;height:${d.h}px">${draw(d, check)}</div><figcaption>${cols}x${rows}</figcaption></figure>`;
+function tile(draw, cols, rows, check, mode) {
+	const d = { ...dims(cols, rows), mode };
+	return `<figure><div class="tile" style="width:${d.w}px;height:${d.h}px">${draw(d, check)}</div><figcaption>${cols}x${rows}${mode ? " · " + mode : ""}</figcaption></figure>`;
 }
 
 document.getElementById("designs").innerHTML = DESIGNS.map((g) => `
@@ -241,9 +247,9 @@ document.getElementById("designs").innerHTML = DESIGNS.map((g) => `
 		<h2>${g.name}</h2>
 		<p>${g.text}</p>
 		<div class="row-title">Read only</div>
-		<div class="shelf">${SIZES.map(([c, r]) => tile(g.draw, c, r, false)).join("")}</div>
+		<div class="shelf">${(g.sizes || SIZES).map(([c, r, m]) => tile(g.draw, c, r, false, m)).join("")}</div>
 		<div class="row-title">Checklist (press a task to mark it done)</div>
-		<div class="shelf">${SIZES.map(([c, r]) => tile(g.draw, c, r, true)).join("")}</div>
+		<div class="shelf">${(g.sizes || SIZES).map(([c, r, m]) => tile(g.draw, c, r, true, m)).join("")}</div>
 	</section>`).join("");
 </script>
 </body>

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MacroDeck.Ui.Config;
+using MacroDeck.Ui.Config.Options;
 using MacroDeck.Ui.Dsl;
 using MacroDeck.Ui.Runtime;
 
@@ -12,6 +13,7 @@ internal static class TasksConfigView
 		var fontSize = new UiState<double>(WidgetSettings.ReadPercent(data, "fontSize"));
 		var cardSize = new UiState<double>(WidgetSettings.ReadPercent(data, "cardSize"));
 		var maxTasks = new UiState<double>(WidgetSettings.Read(data).MaxTasks);
+		var squareDisplay = new UiState<string>(WidgetSettings.ReadSquareDisplay(data));
 
 		return new UiWidgetConfiguration
 		{
@@ -23,6 +25,19 @@ internal static class TasksConfigView
 				[
 					Percent("fontSize", Strings.Config.FontSize.Label(), Strings.Config.FontSize.Description(), fontSize),
 					Percent("cardSize", Strings.Config.CardSize.Label(), Strings.Config.CardSize.Description(), cardSize),
+					new UiChoiceInput
+					{
+						Key = "squareDisplay",
+						Label = Strings.Config.SquareDisplay.Label(),
+						Description = Strings.Config.SquareDisplay.Description(),
+						Segmented = UiValue.Of(true),
+						Options = UiValue.Of<IReadOnlyList<UiOption>>(
+						[
+							new UiOption { Value = WidgetSettings.ListValue, Label = Strings.Config.SquareDisplay.List() },
+							new UiOption { Value = WidgetSettings.CounterValue, Label = Strings.Config.SquareDisplay.Counter() },
+						]),
+						Binding = Bind.To(squareDisplay),
+					},
 					new UiNumberInput
 					{
 						Key = "maxTasks",

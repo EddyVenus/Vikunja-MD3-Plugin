@@ -47,6 +47,17 @@ public sealed class PluginIntegrationTests
 		Assert.That(settings.CardScale, Is.EqualTo(card).Within(0.0001));
 	}
 
+	[TestCase("""{"squareDisplay":"counter"}""", true)]
+	[TestCase("""{"squareDisplay":"list"}""", false)]
+	[TestCase("""{"squareDisplay":7}""", false)]
+	[TestCase("""{}""", false)]
+	public void Square_tiles_show_the_list_unless_the_counter_is_chosen(string json, bool counter)
+	{
+		using var document = JsonDocument.Parse(json);
+
+		Assert.That(WidgetSettings.Read(document.RootElement).SquareCounter, Is.EqualTo(counter));
+	}
+
 	[Test]
 	public void Missing_widget_data_means_the_default_look_and_no_cap_beyond_what_the_tile_fits()
 	{
@@ -56,7 +67,7 @@ public sealed class PluginIntegrationTests
 	[Test]
 	public void The_configuration_view_offers_the_stored_values()
 	{
-		using var document = JsonDocument.Parse("""{"fontSize":130,"cardSize":80,"maxTasks":7}""");
+		using var document = JsonDocument.Parse("""{"fontSize":130,"cardSize":80,"maxTasks":7,"squareDisplay":"counter"}""");
 
 		var host = UiTestHost.Render(TasksConfigView.Build(document.RootElement));
 
@@ -64,6 +75,7 @@ public sealed class PluginIntegrationTests
 		Assert.That(description, Does.Contain("130"));
 		Assert.That(description, Does.Contain("80"));
 		Assert.That(description, Does.Contain("7"));
+		Assert.That(description, Does.Contain("counter"));
 	}
 }
 

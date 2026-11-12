@@ -142,6 +142,17 @@ public sealed class TaskStoreTests
 	}
 
 	[Test]
+	public async Task Priority_is_read_and_missing_priority_means_none()
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json("""[{"id":1,"title":"Urgent","priority":4},{"id":2,"title":"Plain"}]""") };
+		var store = fake.CreateStore(out _);
+
+		await store.RefreshAsync(CancellationToken.None);
+
+		Assert.That(store.Tasks.Peek().Select(t => t.Priority), Is.EqualTo(new[] { 4, 0 }));
+	}
+
+	[Test]
 	public async Task Status_tells_apart_ready_unavailable_and_not_configured()
 	{
 		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
