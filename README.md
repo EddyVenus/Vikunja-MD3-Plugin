@@ -21,7 +21,7 @@ Every list tile shows the page in its header, like "2/4". With one page it shows
 To fit more rows, lower the text or card size. Swiping needs a touch screen, so a hardware deck cannot change page.
 
 Tasks are the open ones across every project you can access: dated tasks first, soonest due first, then undated ones. Only the
-first 200 open tasks are read. The list refreshes once a minute.
+first 200 open tasks are read and kept, so the counter stops at 200. The list refreshes once a minute.
 A checked task disappears from the tile immediately. A repeating task stays on the list, because Vikunja only moves its
 dates forward. If Vikunja cannot be reached the last known list stays on screen and the failure is
 logged once per episode.

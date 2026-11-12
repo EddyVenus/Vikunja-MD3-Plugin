@@ -9,7 +9,7 @@ namespace VikunjaPlugin.Widgets;
 /// <summary>The open tasks every widget draws from, refreshed on a timer so tiles never call the API themselves.</summary>
 public sealed class TaskStore(VikunjaClient client, ILogger logger) : BackgroundService
 {
-	internal const int MaxTasks = 50;
+	internal const int MaxTasks = 200;
 
 	private static readonly TimeSpan _pollInterval = TimeSpan.FromMinutes(1);
 

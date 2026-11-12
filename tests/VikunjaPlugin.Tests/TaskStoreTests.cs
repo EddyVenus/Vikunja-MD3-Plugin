@@ -27,6 +27,26 @@ public sealed class TaskStoreTests
 	}
 
 	[Test]
+	public async Task More_than_fifty_tasks_are_kept_so_the_pages_can_reach_them()
+	{
+		// Vikunja answers 50 per page; the fake serves 120 tasks as pages of 50, 50 and 20.
+		var fake = new FakeVikunja
+		{
+			Respond = (_, path) =>
+			{
+				var page = int.Parse(path.Split("&page=")[1].Split('&')[0], System.Globalization.CultureInfo.InvariantCulture);
+				var ids = Enumerable.Range((page - 1) * 50 + 1, page == 3 ? 20 : 50);
+				return FakeVikunja.Json("[" + string.Join(",", ids.Select(id => $$"""{"id":{{id}},"title":"Task {{id}}","done":false}""")) + "]");
+			},
+		};
+		var store = fake.CreateStore(out _);
+
+		await store.RefreshAsync(CancellationToken.None);
+
+		Assert.That(store.Tasks.Peek(), Has.Count.EqualTo(120));
+	}
+
+	[Test]
 	public async Task Refresh_without_configuration_clears_the_tasks_and_calls_nothing()
 	{
 		var fake = new FakeVikunja();
