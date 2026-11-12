@@ -31,6 +31,15 @@
   <data name="Widgets.Empty" xml:space="preserve">
     <value>No open tasks</value>
   </data>
+  <data name="Widgets.Loading" xml:space="preserve">
+    <value>Loading tasks</value>
+  </data>
+  <data name="Widgets.NotConfigured" xml:space="preserve">
+    <value>Vikunja is not set up</value>
+  </data>
+  <data name="Widgets.Unavailable" xml:space="preserve">
+    <value>Vikunja is unreachable</value>
+  </data>
   <data name="ConfigFlow.Title" xml:space="preserve">
     <value>Connect to Vikunja</value>
   </data>

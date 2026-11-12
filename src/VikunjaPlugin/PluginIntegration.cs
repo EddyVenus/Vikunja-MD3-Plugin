@@ -68,7 +68,8 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 			_credentials.Apply(Uri.TryCreate(serverUrl, UriKind.Absolute, out var address) ? address : null, token);
 		}
 
-		await _store.RefreshAsync(CancellationToken.None);
+		// The store's loop does the network call, so initialization never waits on Vikunja.
+		_store.Reset();
 	}
 
 	public Task ShutdownAsync()

@@ -1,4 +1,5 @@
 using System.Globalization;
+using MacroDeck.Localization;
 using MacroDeck.Ui.Components;
 using MacroDeck.Ui.Dsl;
 using VikunjaPlugin.Api;
@@ -26,20 +27,20 @@ internal static class TasksView
 					KeySelector = task => task.Id.ToString(CultureInfo.InvariantCulture),
 					Template = (task, key) => Row(task, key, onCheck),
 				},
-				new UiWhen
-				{
-					Key = "empty",
-					Condition = () => store.Tasks.Value.Count == 0,
-					Content = () => new UiTextRun
-					{
-						Key = "message",
-						Text = Strings.Widgets.Empty(),
-						Size = 0.09,
-						Role = UiComponentTextRoles.Secondary,
-					},
-				},
+				Message("empty", store, StoreStatus.Ready, Strings.Widgets.Empty()),
+				Message("loading", store, StoreStatus.Loading, Strings.Widgets.Loading()),
+				Message("not-configured", store, StoreStatus.NotConfigured, Strings.Widgets.NotConfigured()),
+				Message("unavailable", store, StoreStatus.Unavailable, Strings.Widgets.Unavailable()),
 			],
 		};
+
+	/// <summary>Shown only while there is nothing to list, so the tile says why instead of looking empty.</summary>
+	private static UiWhen Message(string key, TaskStore store, StoreStatus status, LocalizedText text) => new()
+	{
+		Key = key,
+		Condition = () => store.Tasks.Value.Count == 0 && store.Status.Value == status,
+		Content = () => new UiTextRun { Key = "message", Text = text, Size = 0.09, Role = UiComponentTextRoles.Secondary },
+	};
 
 	private static UiElement Row(VikunjaTask task, string key, Func<VikunjaTask, CancellationToken, Task>? onCheck)
 	{

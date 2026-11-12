@@ -16,8 +16,19 @@ public sealed class TaskStore(VikunjaClient client, ILogger logger) : Background
 	private readonly ILogger _logger = logger.ForContext<TaskStore>();
 	private readonly FailureEpisodeTracker _failures = new();
 	private readonly SemaphoreSlim _gate = new(1, 1);
+	private readonly SemaphoreSlim _wake = new(0);
 
 	public UiState<IReadOnlyList<VikunjaTask>> Tasks { get; } = new([]);
+
+	public UiState<StoreStatus> Status { get; } = new(StoreStatus.Loading);
+
+	/// <summary>Drops what belongs to the previous credentials and asks the background loop for an immediate refresh.</summary>
+	public void Reset()
+	{
+		Tasks.Value = [];
+		Status.Value = StoreStatus.Loading;
+		_wake.Release();
+	}
 
 	public async Task RefreshAsync(CancellationToken cancellationToken)
 	{
@@ -30,31 +41,6 @@ public sealed class TaskStore(VikunjaClient client, ILogger logger) : Background
 		finally
 		{
 			_gate.Release();
-		}
-	}
-
-	private async Task RefreshCoreAsync(CancellationToken cancellationToken)
-	{
-		try
-		{
-			Tasks.Value = await client.GetOpenTasksAsync(MaxTasks, cancellationToken);
-			if (_failures.RecordSuccess() is { } ended)
-			{
-				_logger.Information("Vikunja is reachable again after {Failures} failed refreshes.", ended.Failures);
-			}
-		}
-		catch (VikunjaException exception) when (exception.Reason == VikunjaFailure.NotConfigured)
-		{
-			Tasks.Value = [];
-		}
-		catch (VikunjaException exception)
-		{
-			// Stale tasks stay on screen so a failed refresh never looks like an empty list.
-			var signal = _failures.RecordFailure(exception.Reason.ToString());
-			if (signal.Kind != FailureEpisodeSignalKind.Quiet)
-			{
-				_logger.Warning(exception, "Refreshing Vikunja tasks failed ({Count} in a row).", signal.ConsecutiveFailures);
-			}
 		}
 	}
 
@@ -79,11 +65,44 @@ public sealed class TaskStore(VikunjaClient client, ILogger logger) : Background
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		using var timer = new PeriodicTimer(_pollInterval);
-		do
+		while (!stoppingToken.IsCancellationRequested)
 		{
 			await RefreshAsync(stoppingToken);
+			await _wake.WaitAsync(_pollInterval, stoppingToken);
 		}
-		while (await timer.WaitForNextTickAsync(stoppingToken));
+	}
+
+	private async Task RefreshCoreAsync(CancellationToken cancellationToken)
+	{
+		try
+		{
+			var tasks = await client.GetOpenTasksAsync(MaxTasks, cancellationToken);
+			// An unchanged list is not written back, so tiles are not patched every minute for nothing.
+			if (!tasks.SequenceEqual(Tasks.Peek()))
+			{
+				Tasks.Value = tasks;
+			}
+
+			Status.Value = StoreStatus.Ready;
+			if (_failures.RecordSuccess() is { } ended)
+			{
+				_logger.Information("Vikunja is reachable again after {Failures} failed refreshes.", ended.Failures);
+			}
+		}
+		catch (VikunjaException exception) when (exception.Reason == VikunjaFailure.NotConfigured)
+		{
+			Tasks.Value = [];
+			Status.Value = StoreStatus.NotConfigured;
+		}
+		catch (VikunjaException exception)
+		{
+			// Stale tasks stay on screen so a failed refresh never looks like an empty list.
+			Status.Value = StoreStatus.Unavailable;
+			var signal = _failures.RecordFailure(exception.Reason.ToString());
+			if (signal.Kind != FailureEpisodeSignalKind.Quiet)
+			{
+				_logger.Warning(exception, "Refreshing Vikunja tasks failed ({Count} in a row).", signal.ConsecutiveFailures);
+			}
+		}
 	}
 }
