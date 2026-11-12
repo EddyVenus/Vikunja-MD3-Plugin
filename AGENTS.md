@@ -3,48 +3,31 @@
 This file must be kept up to date. When a rule here stops matching reality, or a new rule emerges from
 work in this repository, update this file as part of that change rather than leaving it to drift.
 
-This repository is the **starting point for a Macro Deck 3 out-of-process plugin**, and it is
-simultaneously the content of the `dotnet new macrodeck-plugin` template package. The plugin under
-`src/VikunjaPlugin/` is deliberately minimal: one integration and one example action,
-`LogMessageAction`, which exists solely to show the localized shape of an action end to end. It is
-meant to be replaced by the plugin's real first action, not grown into a second sample. Nothing else
-is demonstrated here.
+This repository is the **Vikunja plugin for Macro Deck 3**: deck widgets that list the user's open Vikunja
+tasks, one read-only and one where pressing a task marks it done. The plugin lives under
+`src/VikunjaPlugin/`. Worked examples of every capability are in the
+[sample plugins repository](https://github.com/Macro-Deck-App/Macro-Deck-Sample-Plugins).
 
-Worked examples of every capability live in the
-[sample plugins repository](https://github.com/Macro-Deck-App/Macro-Deck-Sample-Plugins), not here.
-Read from there rather than growing this template.
-
-[README.md](README.md) is the human-facing guide: how to build, how to run against a real host, how to
-pack. This file is the rule set for writing the plugin. Read it before changing code. The template
-package itself is covered by
-[packaging/README.md](https://github.com/Macro-Deck-App/Macro-Deck-Plugin-Template/blob/main/packaging/README.md).
+[README.md](README.md) is the human-facing guide. This file is the rule set for writing the plugin.
 
 ## Orientation
 
 ```
 src/VikunjaPlugin/
-  Program.cs             builder chain - a few lines and a RunAsync
+  Program.cs             builder chain, the Vikunja client and the task store registrations
   manifest.json          identity, icon, per-platform entrypoints
   macrodeck-build.json   one publish target per declared entrypoint
-  PluginIntegration.cs   the integration: lifecycle and capability opt-ins
-  LogMessageAction.cs    the example action, localized end to end
+  PluginIntegration.cs   config flow, the two widget types and the UI provider
+  Api/                   typed Vikunja client, credentials holder, failure type
+  ConfigFlow/            instance address and API token step
+  Widgets/               TaskStore (polling), TasksView (the tile tree), TasksSession
   Localization/Strings.resx   default-culture strings; Strings.<tag>.resx per language
   Assets/icon.svg        the icon the manifest declares
-  Properties/launchSettings.json   the single real-host debug profile
 tests/VikunjaPlugin.Tests/
-  PluginIntegrationTests.cs   the plugin builds, the action runs, the catalog is wired
+  fake Vikunja handler, store, view, config flow and localization tests
 ```
 
-The template repository carries two more directories that a generated plugin does not:
-`.template.config/` (the `dotnet new` definition) and `packaging/` (the template package project, kept
-out of the solution on purpose).
-
-`.template.config/content/` holds the *only* deliberate copies in this repository: conditional variants
-of `manifest.json` and `macrodeck-build.json`. `dotnet new` selects platforms and omits unsupplied
-optional fields with `//#if` markers, which would make the checked-in files invalid JSON and break
-`macrodeck-plugin validate`, `build` and the manifest reader. So the files under `src/` stay valid and
-the templated variants replace them during generation. **Change one, change the other**: rendering the
-template with default parameters must reproduce the `src/` files byte for byte, which CI checks.
+Widget type ids (`tasks-readonly`, `tasks-checklist`) are persisted in user decks. Never rename them.
 
 Authoritative upstream documentation, in the
 [Macro Deck 3 repository](https://github.com/Macro-Deck-App/Macro-Deck-3/tree/main/docs/plugin-development):
@@ -53,35 +36,7 @@ artifact, environment variables), `capability-parity.md` (what behaves different
 `analyzers.md`, `conformance.md`, `testing-plugins.md`, `cli.md`. When a question is about SDK behaviour
 rather than this template's own code, look there rather than guessing.
 
-## Before you start on a fresh plugin
-
-`dotnet new macrodeck-plugin` sets the identity and the publication metadata for you:
-
-```bash
-dotnet new macrodeck-plugin -n <Name> --pluginId <id> --pluginName "<Display name>" \
-  --publisher "<Publisher>" --repository <url> --platforms win-x64 --platforms osx-arm64
-```
-
-`--publisher`, `--description`, `--license`, `--repository`, `--homepage` and `--platforms` all land in
-`manifest.json` natively, and `--platforms` drives `macrodeck-build.json` with it. `--homepage` is
-omitted rather than written empty when not supplied, because the schema requires an absolute URL.
-`--repository` is always written and defaults to a placeholder the Store refuses, so pass the real
-one. `macrodeck-plugin new` collects the same values and passes them through.
-
-A repository *cloned* from this template still carries the template's identity, so fix that first, in
-one change:
-
-1. `manifest.json` - `id` (reverse-domain, lowercase, at least two dot-joined kebab segments, e.g.
-   `com.example.my-plugin`), `name`, `version`, `description`, `publisher.name`, `repository`, and
-   `entrypoints` plus the matching `macrodeck-build.json` targets for the platforms you actually ship.
-2. Rename the project, the test project, the solution file and the namespace. The project's
-   `AssemblyName` and `RootNamespace` are pinned: the first names the executable, so change it together
-   with the `entrypoints` paths - never one without the other, or `macrodeck-plugin build` fails with
-   `entrypoint-missing`; the second is where the generated `Strings` class lives.
-3. Replace `Assets/icon.svg`. The manifest's `icon` path is the single source of truth and the host
-   reads that file directly - there is no icon code to change.
-4. Replace `LogMessageAction` with the plugin's real first action, and its keys in
-   `Localization/Strings.resx` with real ones.
+## Analyzers
 
 `MacroDeck.Plugin.Analyzers` is already referenced with `PrivateAssets="all"` - 13 compile-time
 diagnostics that catch most of the mistakes below while you type, plus the `[MacroDeckSdkUsage]`
@@ -114,7 +69,7 @@ A change is not done until all six hold:
    way.
 3. **The Macro Deck SDK is at least `minimumSdkVersion`.** The Macro Deck packages float to the newest
    published version by default, so this usually holds on its own. It stops holding when
-   `MacroDeckSdkVersion` is pinned, or when a build runs against `local-feed/`. A release must never be
+   `MacroDeckSdkVersion` is pinned. A release must never be
    built against an SDK older than the minimum.
 4. **Only allowed Macro Deck packages are used.** Every package in the graph whose id starts with
    `MacroDeck.` must match an entry in `allowedMacroDeckPackages`. Anything else under that prefix is
@@ -267,9 +222,9 @@ capture a default before the config read finishes.
 - Check `MacroDeckStrings` before adding a key - `Common.*`, `Validation.*`, `Connection.*`,
   `Settings.*` are already translated everywhere Macro Deck ships. A duplicated `Save` is one more string
   every translator keeps in sync for text the reader already sees. Compose instead:
-  `MacroDeckStrings.Validation.Required(Strings.Actions.LogMessage.Message.Label())`.
+  `MacroDeckStrings.Validation.Required(Strings.ConfigFlow.Token.Label())`.
 - **Keys are dotted, not underscored.** A dotted key becomes a nested class, so
-  `Actions.LogMessage.Message.Label` is `Strings.Actions.LogMessage.Message.Label()`. Name a key after
+  `ConfigFlow.Token.Label` is `Strings.ConfigFlow.Token.Label()`. Name a key after
   where it is used, not after the English wording. A key that is also a group other keys nest under is
   MDLOC008.
 - Placeholders are named (`{host}`) and become method parameters, so a missing one is a compile error.
@@ -370,16 +325,7 @@ check going from pass to fail as a blocking regression. Most checks `SKIP` until
 capabilities.
 
 The Macro Deck packages float to the newest published version, so the commands above need no version
-argument. Only to test against SDK surface that is not published yet, pack it into `local-feed/` and
-pass `-p:MacroDeckSdkVersion=<version>` - see "Building against a local SDK build" in
-[README.md](README.md).
-
-Working in the template repository itself rather than in a plugin generated from it? Changing its shape
-(files, names, `.template.config/template.json`, `packaging/`) also needs a generated-project check -
-see
-[packaging/README.md](https://github.com/Macro-Deck-App/Macro-Deck-Plugin-Template/blob/main/packaging/README.md).
-
-## Packing a plugin release
+argument. ## Packing a plugin release
 
 ```bash
 macrodeck-plugin build --source src/VikunjaPlugin --output ./artifacts
@@ -410,9 +356,6 @@ match.
 
 - Work on a branch, not directly on `main`. Use `feature/`, `fix/`, `refactor/`, `chore/`, `docs/` or
   `ci/` with a short kebab-case description, and an issue number where one exists.
-- Publishing the template package requires a pushed semantic-version tag such as
-  `v3.0.0-preview.3`. The publish workflow removes the leading `v` and uses the rest as the NuGet
-  package version. A push to `main` alone never publishes.
 - Keep changes focused; no unrelated reformatting.
 - Do not push or open a pull request unless asked.
 - Do not add AI attribution or co-author trailers.
