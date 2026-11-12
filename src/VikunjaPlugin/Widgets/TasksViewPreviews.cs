@@ -41,6 +41,15 @@ internal static class TasksViewPreviews
 	[UiPreview("Offline counter", Profile = UiPreviewProfiles.Widget)]
 	public static UiElement OfflineCounter() => TasksView.Build(StoreWith(_titles, StoreStatus.Unavailable), WidgetSettings.Default with { SquareCounter = true }, onCheck: null);
 
+	[UiPreview("Loading", Profile = UiPreviewProfiles.Widget)]
+	public static UiElement Loading() => TasksView.Build(StoreWith([], StoreStatus.Loading), WidgetSettings.Default, onCheck: null);
+
+	[UiPreview("Not configured", Profile = UiPreviewProfiles.Widget)]
+	public static UiElement NotConfigured() => TasksView.Build(StoreWith([], StoreStatus.NotConfigured), WidgetSettings.Default, onCheck: null);
+
+	[UiPreview("Token rejected", Profile = UiPreviewProfiles.Widget)]
+	public static UiElement TokenRejected() => TasksView.Build(StoreWith([], StoreStatus.Unauthorized), WidgetSettings.Default, onCheck: null);
+
 	[UiPreview("Few tasks", Profile = UiPreviewProfiles.Widget)]
 	public static UiElement FewTasks() => TasksView.Build(StoreWith(_titles[..2]), WidgetSettings.Default, onCheck: null);
 

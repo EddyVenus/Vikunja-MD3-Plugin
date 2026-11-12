@@ -3,8 +3,8 @@
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-        <!-- The Macro Deck packages float to the newest published version, so no release version is
-             pinned anywhere in this repository. -->
+        <!-- The Macro Deck packages are pinned to MacroDeckSdkVersion below, which must stay at or above
+             the Store's minimum SDK version and be bumped together with cli-version in release.yaml. -->
         <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
         <!-- One knob for every Macro Deck package, so a build against a locally packed SDK is
              `dotnet build -p:MacroDeckSdkVersion=<version>` and nothing else - see README.md. -->

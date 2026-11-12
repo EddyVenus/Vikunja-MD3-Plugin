@@ -67,9 +67,9 @@ A change is not done until all six hold:
    the matching versions are blocked. `reason` says why. Replace the package or restructure the code
    that needs it. Never work around a block by vendoring, renaming or loading the package some other
    way.
-3. **The Macro Deck SDK is at least `minimumSdkVersion`.** The Macro Deck packages float to the newest
-   published version by default, so this usually holds on its own. It stops holding when
-   `MacroDeckSdkVersion` is pinned. A release must never be
+3. **The Macro Deck SDK is at least `minimumSdkVersion`.** This repository pins `MacroDeckSdkVersion`
+   (and `cli-version` in `release.yaml`), so the pin does not move on its own: check it against the
+   minimum before every release and bump both together. A release must never be
    built against an SDK older than the minimum.
 4. **Only allowed Macro Deck packages are used.** Every package in the graph whose id starts with
    `MacroDeck.` must match an entry in `allowedMacroDeckPackages`. Anything else under that prefix is
@@ -324,8 +324,10 @@ it after any change to capability shape, cancellation handling or the manifest, 
 check going from pass to fail as a blocking regression. Most checks `SKIP` until the plugin declares
 capabilities.
 
-The Macro Deck packages float to the newest published version, so the commands above need no version
-argument. ## Packing a plugin release
+The Macro Deck packages are pinned to `MacroDeckSdkVersion`, so the commands above need no version
+argument.
+
+## Packing a plugin release
 
 ```bash
 macrodeck-plugin build --source src/VikunjaPlugin --output ./artifacts
