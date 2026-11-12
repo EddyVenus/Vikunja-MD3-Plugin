@@ -8,8 +8,6 @@ public sealed class VikunjaCredentials
 {
 	private volatile Snapshot _current = new(null, null);
 
-	public bool IsConfigured => _current is { BaseAddress: not null, Token: not null };
-
 	public Uri? BaseAddress => _current.BaseAddress;
 
 	public string? Token => _current.Token;

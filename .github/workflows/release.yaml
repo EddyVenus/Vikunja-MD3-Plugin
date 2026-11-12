@@ -6,7 +6,7 @@ on:
 
 jobs:
   publish:
-    uses: Macro-Deck-App/GitHub-Actions/.github/workflows/publish-plugin.yml@v1
+    uses: Macro-Deck-App/GitHub-Actions/.github/workflows/publish-plugin.yml@ea21da166e806a90f60836318527e0aca459064e # v1
     permissions:
       contents: read
       id-token: write

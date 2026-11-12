@@ -31,7 +31,7 @@ logged once per episode.
 1. In Vikunja open Settings, API Tokens and create a token with only these permissions under Tasks: Read all, Read one
    and Update. The plugin needs nothing else.
 2. In Macro Deck add the Vikunja integration and enter the address of your instance (for example
-   `https://vikunja.example.com`) and the token. The connection is verified before it is saved.
+   `https://vikunja.example.com`) and the token. Use `https` unless Vikunja is on your own network. The connection is verified before it is saved.
 3. Add a "Vikunja tasks" widget to a deck.
 
 ## Privacy

@@ -106,17 +106,17 @@ public sealed class TasksViewTests
 	[TestCase(5, "#ff5a5f")]
 	public void Priority_picks_a_color(int priority, string color)
 	{
-		Assert.That(TasksView.PriorityColor(priority), Is.EqualTo(color));
+		Assert.That(TaskLabels.PriorityColor(priority), Is.EqualTo(color));
 	}
 
 	[Test]
 	public void A_task_is_overdue_only_when_it_has_a_past_due_date()
 	{
 		var today = DateOnly.FromDateTime(DateTime.Now);
-		Assert.That(TasksView.IsOverdue(new VikunjaTask(1, "a", false, DateTimeOffset.Now.AddDays(-2)), today), Is.True);
-		Assert.That(TasksView.IsOverdue(new VikunjaTask(1, "a", false, DateTimeOffset.Now.AddDays(2)), today), Is.False);
-		Assert.That(TasksView.IsOverdue(new VikunjaTask(1, "a", false, DateTimeOffset.MinValue), today), Is.False);
-		Assert.That(TasksView.IsOverdue(new VikunjaTask(1, "a", false), today), Is.False);
+		Assert.That(TaskLabels.IsOverdue(new VikunjaTask(1, "a", false, DateTimeOffset.Now.AddDays(-2)), today), Is.True);
+		Assert.That(TaskLabels.IsOverdue(new VikunjaTask(1, "a", false, DateTimeOffset.Now.AddDays(2)), today), Is.False);
+		Assert.That(TaskLabels.IsOverdue(new VikunjaTask(1, "a", false, DateTimeOffset.MinValue), today), Is.False);
+		Assert.That(TaskLabels.IsOverdue(new VikunjaTask(1, "a", false), today), Is.False);
 	}
 
 	[Test]

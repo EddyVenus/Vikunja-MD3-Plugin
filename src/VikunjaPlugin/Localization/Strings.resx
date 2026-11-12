@@ -44,7 +44,7 @@
     <value>Connect to Vikunja</value>
   </data>
   <data name="ConfigFlow.Description" xml:space="preserve">
-    <value>Enter the address of your Vikunja instance and an API token.</value>
+    <value>Enter the address of your Vikunja instance and an API token. Use https unless Vikunja is on your own network.</value>
   </data>
   <data name="ConfigFlow.TokenInstruction" xml:space="preserve">
     <value>In Vikunja go to Settings, API Tokens and create a token with only these permissions under Tasks: Read all, Read one and Update.</value>

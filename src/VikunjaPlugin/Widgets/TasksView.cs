@@ -15,7 +15,6 @@ internal static class TasksView
 	private const double TilePadding = 0.05;
 	private const double LineThickness = 0.004;
 	private const string LineColor = "#ffffff1f";
-	private const string LateColor = "#ff5a5f";
 	private const string Transparent = "#00000000";
 
 	// Shown instead of a quiet failure: dimmed content and an orange mark say Vikunja could not be reached.
@@ -334,16 +333,16 @@ internal static class TasksView
 
 		if (due && task.HasDueDate)
 		{
-			var overdue = IsOverdue(task, today);
+			var overdue = TaskLabels.IsOverdue(task, today);
 			children.Add(new UiTextRun
 			{
 				Key = "due",
-				Text = DueLabel(task.DueDate!.Value, today),
+				Text = TaskLabels.DueLabel(task.DueDate!.Value, today),
 				Size = layout.TextSize * 0.75,
 				MainSize = layout.TextSize * 4.5,
 				Align = UiValue.Of(UiComponentAlignments.End),
 				Role = overdue ? default : (UiValue<string>)UiComponentTextRoles.Secondary,
-				Color = overdue ? UiValue.Of(LateColor) : default,
+				Color = overdue ? UiValue.Of(TaskLabels.LateColor) : default,
 			});
 		}
 
@@ -372,7 +371,7 @@ internal static class TasksView
 	{
 		Key = "dot",
 		Shape = UiValue.Of(UiComponentShapes.Circle),
-		Color = UiValue.Of(PriorityColor(task.Priority)),
+		Color = UiValue.Of(TaskLabels.PriorityColor(task.Priority)),
 	});
 
 	private static UiModifier Round(string key, double size, UiShape shape) => new()
@@ -381,33 +380,6 @@ internal static class TasksView
 		Frame = UiValue.Of(new UiFrame { Width = size, Height = size, MinWidth = size }),
 		Child = shape,
 	};
-
-	// Vikunja priorities: 0 unset, 1 low, 2 medium, 3 high, 4 urgent, 5 do now.
-	internal static string PriorityColor(int priority) => priority switch
-	{
-		<= 0 => "#6b7078",
-		1 => "#51cf66",
-		2 => "#ffa94d",
-		_ => LateColor,
-	};
-
-	internal static bool IsOverdue(VikunjaTask task, DateOnly today) => task.HasDueDate && LocalDay(task.DueDate!.Value) < today;
-
-	private static DateOnly LocalDay(DateTimeOffset moment) => DateOnly.FromDateTime(moment.ToLocalTime().DateTime);
-
-	internal static UiText DueLabel(DateTimeOffset due, DateOnly today)
-	{
-		var day = LocalDay(due);
-		var days = day.DayNumber - today.DayNumber;
-		return days switch
-		{
-			< 0 => Strings.Widgets.Due.Overdue(),
-			0 => Strings.Widgets.Due.Today(),
-			1 => Strings.Widgets.Due.Tomorrow(),
-			< 7 => UiText.Of(day.ToString("ddd", CultureInfo.CurrentCulture)),
-			_ => UiText.Of(day.ToString("MMM d", CultureInfo.CurrentCulture)),
-		};
-	}
 
 	/// <summary>The lengths of one row for the chosen settings, and how many rows a tile of a given height holds.</summary>
 	internal sealed class RowLayout(WidgetSettings settings, bool pressable)
