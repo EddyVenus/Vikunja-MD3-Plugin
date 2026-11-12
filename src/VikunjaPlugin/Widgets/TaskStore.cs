@@ -22,6 +22,9 @@ public sealed class TaskStore(VikunjaClient client, ILogger logger) : Background
 
 	public UiState<StoreStatus> Status { get; } = new(StoreStatus.Loading);
 
+	/// <summary>The local date, moved on by each refresh, so rows that say "Today" or "Overdue" are redrawn when the day changes.</summary>
+	public UiState<DateOnly> Today { get; } = new(DateOnly.FromDateTime(DateTime.Now));
+
 	/// <summary>Drops what belongs to the previous credentials and asks the background loop for an immediate refresh.</summary>
 	public void Reset()
 	{
@@ -74,6 +77,7 @@ public sealed class TaskStore(VikunjaClient client, ILogger logger) : Background
 
 	private async Task RefreshCoreAsync(CancellationToken cancellationToken)
 	{
+		Today.Value = DateOnly.FromDateTime(DateTime.Now);
 		try
 		{
 			var tasks = await client.GetOpenTasksAsync(MaxTasks, cancellationToken);

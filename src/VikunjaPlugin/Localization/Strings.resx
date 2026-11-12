@@ -85,12 +85,6 @@
   <data name="Config.CardSize.Description" xml:space="preserve">
     <value>Scales the padding and spacing of each task card. 100 is the default.</value>
   </data>
-  <data name="Config.MaxTasks.Label" xml:space="preserve">
-    <value>Maximum tasks</value>
-  </data>
-  <data name="Config.MaxTasks.Description" xml:space="preserve">
-    <value>Upper limit of tasks shown. The tile never draws more rows than fit.</value>
-  </data>
   <data name="Config.SquareDisplay.Label" xml:space="preserve">
     <value>Square tiles show</value>
   </data>

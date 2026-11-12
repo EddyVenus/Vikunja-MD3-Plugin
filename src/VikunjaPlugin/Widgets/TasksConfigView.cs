@@ -12,7 +12,6 @@ internal static class TasksConfigView
 	{
 		var fontSize = new UiState<double>(WidgetSettings.ReadPercent(data, "fontSize"));
 		var cardSize = new UiState<double>(WidgetSettings.ReadPercent(data, "cardSize"));
-		var maxTasks = new UiState<double>(WidgetSettings.Read(data).MaxTasks);
 		var squareDisplay = new UiState<string>(WidgetSettings.ReadSquareDisplay(data));
 
 		return new UiWidgetConfiguration
@@ -37,16 +36,6 @@ internal static class TasksConfigView
 							new UiOption { Value = WidgetSettings.CounterValue, Label = Strings.Config.SquareDisplay.Counter() },
 						]),
 						Binding = Bind.To(squareDisplay),
-					},
-					new UiNumberInput
-					{
-						Key = "maxTasks",
-						Label = Strings.Config.MaxTasks.Label(),
-						Description = Strings.Config.MaxTasks.Description(),
-						Min = 1,
-						Max = TaskStore.MaxTasks,
-						Step = 1,
-						Binding = Bind.To(maxTasks),
 					},
 				],
 			},

@@ -2,6 +2,7 @@ using System.Globalization;
 using MacroDeck.Localization;
 using MacroDeck.Ui.Components;
 using MacroDeck.Ui.Dsl;
+using MacroDeck.Ui.Runtime;
 using VikunjaPlugin.Api;
 
 namespace VikunjaPlugin.Widgets;
@@ -35,12 +36,13 @@ internal static class TasksView
 		Func<VikunjaTask, CancellationToken, Task>? onCheck)
 	{
 		var layout = new RowLayout(settings, onCheck is not null);
+		var page = new UiState<int>(0);
 		var variants = new List<UiResponsiveVariant>
 		{
 			// Tried in order: the taller the tile is relative to its width, the more rows fit, and a header fits too.
-			new() { MaxAspect = 0.4, Content = Rows("tallest", 2.5, store, layout, onCheck, header: true, due: false) },
-			new() { MaxAspect = 0.55, Content = Rows("taller", 1.82, store, layout, onCheck, header: true, due: false) },
-			new() { MaxAspect = SquareMinAspect, Content = Rows("tall", 1.25, store, layout, onCheck, header: true, due: false) },
+			new() { MaxAspect = 0.4, Content = Rows("tallest", 2.5, store, layout, page, onCheck, header: true, due: false) },
+			new() { MaxAspect = 0.55, Content = Rows("taller", 1.82, store, layout, page, onCheck, header: true, due: false) },
+			new() { MaxAspect = SquareMinAspect, Content = Rows("tall", 1.25, store, layout, page, onCheck, header: true, due: false) },
 		};
 
 		if (settings.SquareCounter)
@@ -53,8 +55,8 @@ internal static class TasksView
 			} });
 		}
 
-		// Wide tiles have the room for the due date; it is dropped on squares so the title keeps its width.
-		variants.Add(new() { MinAspect = WideMinAspect, Content = Rows("wide", 1.0, store, layout, onCheck, header: false, due: true) });
+		// Every shape has a header; wide tiles also have the room for the due date, which squares drop so the title keeps its width.
+		variants.Add(new() { MinAspect = WideMinAspect, Content = Rows("wide", 1.0, store, layout, page, onCheck, header: true, due: true) });
 
 		return new UiStack
 		{
@@ -72,7 +74,7 @@ internal static class TasksView
 				{
 					Key = "list",
 					Fill = true,
-					Default = Rows("compact", 1.0, store, layout, onCheck, header: false, due: false),
+					Default = Rows("compact", 1.0, store, layout, page, onCheck, header: true, due: false),
 					Variants = variants,
 				},
 			],
@@ -80,11 +82,12 @@ internal static class TasksView
 	}
 
 	/// <param name="minHeight">The least height, in tile bases, a tile has when this variant is chosen.</param>
-	private static UiStack Rows(
+	private static UiModifier Rows(
 		string key,
 		double minHeight,
 		TaskStore store,
 		RowLayout layout,
+		UiState<int> page,
 		Func<VikunjaTask, CancellationToken, Task>? onCheck,
 		bool header,
 		bool due)
@@ -93,23 +96,59 @@ internal static class TasksView
 		var children = new List<UiElement>();
 		if (header)
 		{
-			children.Add(Header(store, layout));
+			children.Add(Header(store, layout, page, count));
 		}
 
 		children.Add(new UiRepeat<VikunjaTask>
 		{
 			Key = "rows",
-			Items = UiValue.From<IReadOnlyList<VikunjaTask>>(() => store.Tasks.Value.Take(count).ToList()),
-			KeySelector = task => task.Id.ToString(CultureInfo.InvariantCulture),
-			Template = (task, rowKey) => Row(task, rowKey, layout, onCheck, due),
+			Items = UiValue.From<IReadOnlyList<VikunjaTask>>(() =>
+			{
+				var tasks = store.Tasks.Value;
+				_ = store.Today.Value; // read so the rows are drawn again when the day changes
+				return tasks.Skip(CurrentPage(page.Value, tasks.Count, count) * count).Take(count).ToList();
+			}),
+			// The day is part of the key, so a new day gives new rows with fresh "Today" and "Overdue" labels.
+			KeySelector = task => FormattableString.Invariant($"{task.Id}-{store.Today.Peek().DayNumber}"),
+			Template = (task, rowKey) => Row(task, rowKey, layout, onCheck, due, store.Today.Peek()),
 		});
 
-		return new UiStack
+		// A swipe only registers over the rows, so the page is turned from where the list is drawn.
+		return new UiModifier
 		{
-			Key = key,
-			Align = UiValue.Of(UiComponentAlignments.Stretch),
-			Gap = layout.Gap,
-			Children = children,
+			Key = key + "-swipe",
+			Events = [UiEventHandler.On(UiComponentEvents.Swipe, swipe => Turn(swipe, store, page, count))],
+			Child = new UiStack
+			{
+				Key = key,
+				Align = UiValue.Of(UiComponentAlignments.Stretch),
+				Gap = layout.Gap,
+				Children = children,
+			},
+		};
+	}
+
+	internal static int PageCount(int total, int perPage) => Math.Max(1, (total + perPage - 1) / perPage);
+
+	/// <summary>The page to draw: the chosen one, pulled back when the list shrank under it.</summary>
+	internal static int CurrentPage(int page, int total, int perPage) => Math.Clamp(page, 0, PageCount(total, perPage) - 1);
+
+	/// <summary>Swiping up shows the next page and down the previous one, wrapping around at either end.</summary>
+	private static void Turn(UiEventData swipe, TaskStore store, UiState<int> page, int perPage)
+	{
+		if (!swipe.TryGetString(out var direction))
+		{
+			return;
+		}
+
+		var total = store.Tasks.Peek().Count;
+		var pages = PageCount(total, perPage);
+		var current = CurrentPage(page.Peek(), total, perPage);
+		page.Value = direction switch
+		{
+			"up" => (current + 1) % pages,
+			"down" => (current + pages - 1) % pages,
+			_ => current,
 		};
 	}
 
@@ -165,7 +204,7 @@ internal static class TasksView
 		},
 	};
 
-	private static UiStack Header(TaskStore store, RowLayout layout) => new()
+	private static UiStack Header(TaskStore store, RowLayout layout, UiState<int> page, int perPage) => new()
 	{
 		Key = "header",
 		Direction = UiValue.Of(UiComponentDirections.Horizontal),
@@ -177,7 +216,15 @@ internal static class TasksView
 			new UiTextRun
 			{
 				Key = "count",
-				Text = UiText.From(() => store.Tasks.Value.Count.ToString(CultureInfo.InvariantCulture)),
+				// Shows "page/pages" once there is more than one page, and the open count otherwise.
+				Text = UiText.From(() =>
+				{
+					var total = store.Tasks.Value.Count;
+					var pages = PageCount(total, perPage);
+					return pages > 1
+						? $"{CurrentPage(page.Value, total, perPage) + 1}/{pages}"
+						: total.ToString(CultureInfo.InvariantCulture);
+				}),
 				Size = layout.HeaderSize,
 				Role = UiComponentTextRoles.Secondary,
 			},
@@ -190,9 +237,10 @@ internal static class TasksView
 		string key,
 		RowLayout layout,
 		Func<VikunjaTask, CancellationToken, Task>? onCheck,
-		bool due)
+		bool due,
+		DateOnly today)
 	{
-		var content = RowContent(task, layout, onCheck is not null, due);
+		var content = RowContent(task, layout, onCheck is not null, due, today);
 		UiElement row = onCheck is null
 			? content
 			: new UiButton
@@ -221,7 +269,7 @@ internal static class TasksView
 		};
 	}
 
-	private static UiStack RowContent(VikunjaTask task, RowLayout layout, bool pressable, bool due)
+	private static UiStack RowContent(VikunjaTask task, RowLayout layout, bool pressable, bool due, DateOnly today)
 	{
 		var children = new List<UiElement>
 		{
@@ -231,11 +279,11 @@ internal static class TasksView
 
 		if (due && task.HasDueDate)
 		{
-			var overdue = IsOverdue(task);
+			var overdue = IsOverdue(task, today);
 			children.Add(new UiTextRun
 			{
 				Key = "due",
-				Text = DueLabel(task.DueDate!.Value),
+				Text = DueLabel(task.DueDate!.Value, today),
 				Size = layout.TextSize * 0.75,
 				MainSize = layout.TextSize * 4.5,
 				Align = UiValue.Of(UiComponentAlignments.End),
@@ -288,12 +336,14 @@ internal static class TasksView
 		_ => LateColor,
 	};
 
-	internal static bool IsOverdue(VikunjaTask task) => task.HasDueDate && task.DueDate!.Value.ToLocalTime().Date < DateTime.Today;
+	internal static bool IsOverdue(VikunjaTask task, DateOnly today) => task.HasDueDate && LocalDay(task.DueDate!.Value) < today;
 
-	internal static UiText DueLabel(DateTimeOffset due)
+	private static DateOnly LocalDay(DateTimeOffset moment) => DateOnly.FromDateTime(moment.ToLocalTime().DateTime);
+
+	internal static UiText DueLabel(DateTimeOffset due, DateOnly today)
 	{
-		var day = due.ToLocalTime().Date;
-		var days = (day - DateTime.Today).Days;
+		var day = LocalDay(due);
+		var days = day.DayNumber - today.DayNumber;
 		return days switch
 		{
 			< 0 => Strings.Widgets.Due.Overdue(),
@@ -320,7 +370,7 @@ internal static class TasksView
 			var rowHeight = (TextSize + 2 * Padding) * (pressable ? ButtonRowFactor : 1) + LineThickness;
 			var usable = minHeight - 2 * TilePadding + Gap - (header ? HeaderSize + Gap : 0);
 			var fit = (int)Math.Floor(usable / (rowHeight + Gap));
-			return Math.Clamp(fit, 1, settings.MaxTasks);
+			return Math.Clamp(fit, 1, TaskStore.MaxTasks);
 		}
 	}
 }

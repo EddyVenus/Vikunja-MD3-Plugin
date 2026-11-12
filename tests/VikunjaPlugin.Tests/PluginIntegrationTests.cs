@@ -21,18 +21,6 @@ public sealed class PluginIntegrationTests
 		Assert.DoesNotThrowAsync(harness.InitializeIntegrationsAsync);
 	}
 
-	[TestCase("""{"maxTasks":3}""", 3)]
-	[TestCase("""{"maxTasks":0}""", 1)]
-	[TestCase("""{"maxTasks":9999}""", 50)]
-	[TestCase("""{}""", 50)]
-	[TestCase("""{"maxTasks":"many"}""", 50)]
-	public void Max_tasks_is_read_from_widget_data_and_clamped(string json, int expected)
-	{
-		using var document = JsonDocument.Parse(json);
-
-		Assert.That(WidgetSettings.Read(document.RootElement).MaxTasks, Is.EqualTo(expected));
-	}
-
 	[TestCase("""{"fontSize":150,"cardSize":75}""", 1.5, 0.75)]
 	[TestCase("""{"fontSize":10,"cardSize":900}""", 0.5, 2.0)]
 	[TestCase("""{}""", 1.0, 1.0)]
@@ -67,14 +55,13 @@ public sealed class PluginIntegrationTests
 	[Test]
 	public void The_configuration_view_offers_the_stored_values()
 	{
-		using var document = JsonDocument.Parse("""{"fontSize":130,"cardSize":80,"maxTasks":7,"squareDisplay":"counter"}""");
+		using var document = JsonDocument.Parse("""{"fontSize":130,"cardSize":80,"squareDisplay":"counter"}""");
 
 		var host = UiTestHost.Render(TasksConfigView.Build(document.RootElement));
 
 		var description = host.Describe();
 		Assert.That(description, Does.Contain("130"));
 		Assert.That(description, Does.Contain("80"));
-		Assert.That(description, Does.Contain("7"));
 		Assert.That(description, Does.Contain("counter"));
 	}
 }

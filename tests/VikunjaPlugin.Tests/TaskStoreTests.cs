@@ -141,6 +141,8 @@ public sealed class TaskStoreTests
 		Assert.That(store.Tasks.Peek().Select(t => t.Id), Is.EqualTo(ExpectedOrder));
 	}
 
+	private static readonly int[] ExpectedPriorities = [4, 0];
+
 	[Test]
 	public async Task Priority_is_read_and_missing_priority_means_none()
 	{
@@ -149,7 +151,7 @@ public sealed class TaskStoreTests
 
 		await store.RefreshAsync(CancellationToken.None);
 
-		Assert.That(store.Tasks.Peek().Select(t => t.Priority), Is.EqualTo(new[] { 4, 0 }));
+		Assert.That(store.Tasks.Peek().Select(t => t.Priority), Is.EqualTo(ExpectedPriorities));
 	}
 
 	[Test]

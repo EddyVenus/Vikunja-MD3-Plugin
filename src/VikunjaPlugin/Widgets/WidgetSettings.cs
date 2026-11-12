@@ -2,19 +2,18 @@ using System.Text.Json;
 
 namespace VikunjaPlugin.Widgets;
 
-/// <summary>What a widget stores: text and card scale as percentages of the default look, an optional row cap, and whether square tiles show only the count.</summary>
-internal readonly record struct WidgetSettings(double FontScale, double CardScale, int MaxTasks, bool SquareCounter = false)
+/// <summary>What a widget stores: text and card scale as percentages of the default look, and whether square tiles show only the count.</summary>
+internal readonly record struct WidgetSettings(double FontScale, double CardScale, bool SquareCounter = false)
 {
 	internal const int MinPercent = 50;
 	internal const int MaxPercent = 200;
 	internal const int DefaultPercent = 100;
 
-	public static WidgetSettings Default { get; } = new(1, 1, TaskStore.MaxTasks);
+	public static WidgetSettings Default { get; } = new(1, 1);
 
 	public static WidgetSettings Read(JsonElement data) => new(
 		ReadPercent(data, "fontSize") / 100d,
 		ReadPercent(data, "cardSize") / 100d,
-		ReadInt(data, "maxTasks", 1, TaskStore.MaxTasks, TaskStore.MaxTasks),
 		ReadSquareDisplay(data) == CounterValue);
 
 	internal const string CounterValue = "counter";

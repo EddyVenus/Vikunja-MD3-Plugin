@@ -18,7 +18,7 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 	internal const string ReadOnlyWidgetId = "tasks-readonly";
 	internal const string ChecklistWidgetId = "tasks-checklist";
 
-	private const string WidgetSchema = """{"type":"object","properties":{"maxTasks":{"type":"integer","minimum":1,"maximum":50},"fontSize":{"type":"integer","minimum":50,"maximum":200},"cardSize":{"type":"integer","minimum":50,"maximum":200},"squareDisplay":{"type":"string","enum":["list","counter"]}}}""";
+	private const string WidgetSchema = """{"type":"object","properties":{"fontSize":{"type":"integer","minimum":50,"maximum":200},"cardSize":{"type":"integer","minimum":50,"maximum":200},"squareDisplay":{"type":"string","enum":["list","counter"]}}}""";
 	private const string WidgetDefaultData = "{}";
 
 	private readonly VikunjaClient _client;
