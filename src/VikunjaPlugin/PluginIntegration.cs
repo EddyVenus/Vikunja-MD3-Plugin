@@ -5,6 +5,7 @@ using MacroDeck.Sdk.ConfigFlow;
 using MacroDeck.Sdk.Ui;
 using MacroDeck.Sdk.Widgets;
 using MacroDeck.Ui.Model.Surfaces;
+using MacroDeck.Ui.Runtime;
 using Serilog;
 using VikunjaPlugin.Api;
 using VikunjaPlugin.ConfigFlow;
@@ -17,7 +18,7 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 	internal const string ReadOnlyWidgetId = "tasks-readonly";
 	internal const string ChecklistWidgetId = "tasks-checklist";
 
-	private const string WidgetSchema = """{"type":"object","properties":{"maxTasks":{"type":"integer","minimum":1}}}""";
+	private const string WidgetSchema = """{"type":"object","properties":{"maxTasks":{"type":"integer","minimum":1,"maximum":50},"fontSize":{"type":"integer","minimum":50,"maximum":200},"cardSize":{"type":"integer","minimum":50,"maximum":200}}}""";
 	private const string WidgetDefaultData = "{}";
 
 	private readonly VikunjaClient _client;
@@ -44,6 +45,7 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 	[
 		new() { Kind = UiSurfaceKinds.Widget, SessionMode = UiSessionModes.Shared },
 		new() { Kind = UiSurfaceKinds.Preview, SessionMode = UiSessionModes.Shared },
+		new() { Kind = UiSurfaceKinds.Config, SessionMode = UiSessionModes.Exclusive },
 	];
 
 	public string ProviderName => "Vikunja";
@@ -85,7 +87,8 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 				Strings.Widgets.ReadOnly.Name(),
 				Strings.Widgets.ReadOnly.Description(),
 				DefaultData: WidgetDefaultData,
-				DataSchema: WidgetSchema),
+				DataSchema: WidgetSchema,
+				HasConfiguration: true),
 			cancellationToken);
 		var checklist = await context.RegisterWidgetTypeAsync(
 			new WidgetTypeDescriptor(
@@ -93,7 +96,8 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 				Strings.Widgets.Checklist.Name(),
 				Strings.Widgets.Checklist.Description(),
 				DefaultData: WidgetDefaultData,
-				DataSchema: WidgetSchema),
+				DataSchema: WidgetSchema,
+				HasConfiguration: true),
 			cancellationToken);
 
 		_readOnlyType = readOnly.WidgetTypeId;
@@ -105,11 +109,16 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 		var surface = request.Surface;
 		var attributes = surface.Attributes;
 
+		var isConfig = surface.Kind == UiSurfaceKinds.Config
+			&& attributes.TryGetValue(UiConfigSurfaceAttributes.EntryPoint, out var entryPoint)
+			&& entryPoint.GetString() == UiConfigEntryPoints.WidgetConfig;
+		var typeKey = isConfig ? UiConfigSurfaceAttributes.WidgetType : UiWidgetSurfaceAttributes.WidgetType;
+		var dataKey = isConfig ? UiConfigSurfaceAttributes.WidgetData : UiWidgetSurfaceAttributes.Data;
+
 		var isTileSurface = surface.Kind is UiSurfaceKinds.Widget or UiSurfaceKinds.Preview;
 		var isSample = attributes.TryGetValue(UiWidgetSurfaceAttributes.Sample, out var sample)
 			&& sample.ValueKind == JsonValueKind.True;
-		if (!isTileSurface || isSample
-			|| !attributes.TryGetValue(UiWidgetSurfaceAttributes.WidgetType, out var typeElement))
+		if (!(isConfig || isTileSurface) || isSample || !attributes.TryGetValue(typeKey, out var typeElement))
 		{
 			return Task.FromResult<IUiSession?>(null);
 		}
@@ -120,18 +129,14 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 			return Task.FromResult<IUiSession?>(null);
 		}
 
-		attributes.TryGetValue(UiWidgetSurfaceAttributes.Data, out var data);
+		attributes.TryGetValue(dataKey, out var data);
+		if (isConfig)
+		{
+			return Task.FromResult<IUiSession?>(new ViewSession(new UiView(surface, TasksConfigView.Build(data))));
+		}
 
 		// The editor preview never writes to Vikunja, whatever the widget type.
 		var checkable = widgetType == _checklistType && surface.Kind == UiSurfaceKinds.Widget;
-		return Task.FromResult<IUiSession?>(new TasksSession(surface, _store, MaxTasks(data), checkable));
+		return Task.FromResult<IUiSession?>(new TasksSession(surface, _store, WidgetSettings.Read(data), checkable));
 	}
-
-	internal static int MaxTasks(JsonElement data)
-		=> data.ValueKind == JsonValueKind.Object
-			&& data.TryGetProperty("maxTasks", out var value)
-			&& value.ValueKind == JsonValueKind.Number
-			&& value.TryGetInt32(out var count)
-				? Math.Clamp(count, 1, TaskStore.MaxTasks)
-				: TaskStore.MaxTasks;
 }

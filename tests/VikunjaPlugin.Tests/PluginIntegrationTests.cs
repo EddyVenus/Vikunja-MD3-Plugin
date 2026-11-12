@@ -1,6 +1,8 @@
 using System.Text.Json;
 using MacroDeck.Plugin.Testing;
+using MacroDeck.Ui.Testing;
 using NUnit.Framework;
+using VikunjaPlugin.Widgets;
 
 namespace VikunjaPlugin.Tests;
 
@@ -28,13 +30,40 @@ public sealed class PluginIntegrationTests
 	{
 		using var document = JsonDocument.Parse(json);
 
-		Assert.That(PluginIntegration.MaxTasks(document.RootElement), Is.EqualTo(expected));
+		Assert.That(WidgetSettings.Read(document.RootElement).MaxTasks, Is.EqualTo(expected));
+	}
+
+	[TestCase("""{"fontSize":150,"cardSize":75}""", 1.5, 0.75)]
+	[TestCase("""{"fontSize":10,"cardSize":900}""", 0.5, 2.0)]
+	[TestCase("""{}""", 1.0, 1.0)]
+	[TestCase("""{"fontSize":"big"}""", 1.0, 1.0)]
+	public void Font_and_card_size_are_percentages_clamped_to_a_sane_range(string json, double font, double card)
+	{
+		using var document = JsonDocument.Parse(json);
+
+		var settings = WidgetSettings.Read(document.RootElement);
+
+		Assert.That(settings.FontScale, Is.EqualTo(font).Within(0.0001));
+		Assert.That(settings.CardScale, Is.EqualTo(card).Within(0.0001));
 	}
 
 	[Test]
-	public void Missing_widget_data_means_no_cap_beyond_what_the_tile_fits()
+	public void Missing_widget_data_means_the_default_look_and_no_cap_beyond_what_the_tile_fits()
 	{
-		Assert.That(PluginIntegration.MaxTasks(default), Is.EqualTo(50));
+		Assert.That(WidgetSettings.Read(default), Is.EqualTo(WidgetSettings.Default));
+	}
+
+	[Test]
+	public void The_configuration_view_offers_the_stored_values()
+	{
+		using var document = JsonDocument.Parse("""{"fontSize":130,"cardSize":80,"maxTasks":7}""");
+
+		var host = UiTestHost.Render(TasksConfigView.Build(document.RootElement));
+
+		var description = host.Describe();
+		Assert.That(description, Does.Contain("130"));
+		Assert.That(description, Does.Contain("80"));
+		Assert.That(description, Does.Contain("7"));
 	}
 }
 

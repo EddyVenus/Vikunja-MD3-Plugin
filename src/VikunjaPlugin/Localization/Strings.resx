@@ -73,4 +73,22 @@
   <data name="Errors.Rejected" xml:space="preserve">
     <value>Vikunja refused the request.</value>
   </data>
+  <data name="Config.FontSize.Label" xml:space="preserve">
+    <value>Text size (%)</value>
+  </data>
+  <data name="Config.FontSize.Description" xml:space="preserve">
+    <value>Scales the task text. 100 is the default.</value>
+  </data>
+  <data name="Config.CardSize.Label" xml:space="preserve">
+    <value>Card size (%)</value>
+  </data>
+  <data name="Config.CardSize.Description" xml:space="preserve">
+    <value>Scales the padding and spacing of each task card. 100 is the default.</value>
+  </data>
+  <data name="Config.MaxTasks.Label" xml:space="preserve">
+    <value>Maximum tasks</value>
+  </data>
+  <data name="Config.MaxTasks.Description" xml:space="preserve">
+    <value>Upper limit of tasks shown. The tile never draws more rows than fit.</value>
+  </data>
 </root>

@@ -21,19 +21,25 @@ internal static class TasksViewPreviews
 	];
 
 	[UiPreview("Read only", Profile = UiPreviewProfiles.Widget)]
-	public static UiElement ReadOnly() => TasksView.Build(StoreWith(_titles), TaskStore.MaxTasks, onCheck: null);
+	public static UiElement ReadOnly() => TasksView.Build(StoreWith(_titles), WidgetSettings.Default, onCheck: null);
 
 	[UiPreview("Checklist", Profile = UiPreviewProfiles.Widget)]
-	public static UiElement Checklist() => TasksView.Build(StoreWith(_titles), TaskStore.MaxTasks, (_, _) => Task.CompletedTask);
+	public static UiElement Checklist() => TasksView.Build(StoreWith(_titles), WidgetSettings.Default, (_, _) => Task.CompletedTask);
+
+	[UiPreview("Large text", Profile = UiPreviewProfiles.Widget)]
+	public static UiElement LargeText() => TasksView.Build(StoreWith(_titles), WidgetSettings.Default with { FontScale = 1.5 }, onCheck: null);
+
+	[UiPreview("Slim cards", Profile = UiPreviewProfiles.Widget)]
+	public static UiElement SlimCards() => TasksView.Build(StoreWith(_titles), WidgetSettings.Default with { FontScale = 0.8, CardScale = 0.5 }, onCheck: null);
 
 	[UiPreview("Few tasks", Profile = UiPreviewProfiles.Widget)]
-	public static UiElement FewTasks() => TasksView.Build(StoreWith(_titles[..2]), TaskStore.MaxTasks, onCheck: null);
+	public static UiElement FewTasks() => TasksView.Build(StoreWith(_titles[..2]), WidgetSettings.Default, onCheck: null);
 
 	[UiPreview("Empty", Profile = UiPreviewProfiles.Widget)]
-	public static UiElement Empty() => TasksView.Build(StoreWith([], StoreStatus.Ready), TaskStore.MaxTasks, onCheck: null);
+	public static UiElement Empty() => TasksView.Build(StoreWith([], StoreStatus.Ready), WidgetSettings.Default, onCheck: null);
 
 	[UiPreview("Unavailable", Profile = UiPreviewProfiles.Widget)]
-	public static UiElement Unavailable() => TasksView.Build(StoreWith([], StoreStatus.Unavailable), TaskStore.MaxTasks, onCheck: null);
+	public static UiElement Unavailable() => TasksView.Build(StoreWith([], StoreStatus.Unavailable), WidgetSettings.Default, onCheck: null);
 
 	private static TaskStore StoreWith(string[] titles, StoreStatus status = StoreStatus.Ready)
 	{

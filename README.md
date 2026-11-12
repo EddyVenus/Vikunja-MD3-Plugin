@@ -10,11 +10,11 @@ Show your open [Vikunja](https://vikunja.io) tasks on a Macro Deck widget and ma
 | Vikunja tasks (checklist) | Lists your open tasks. Pressing a task marks it as done in Vikunja and removes it from the list. |
 
 Each widget draws as many rows as fit its tile: a taller tile shows more tasks, and long titles are cut with an ellipsis.
-To cap the number of tasks, set `maxTasks` (at most 50) in the widget's JSON view:
+Open the widget's settings in Macro Deck to change:
 
-```json
-{ "maxTasks": 8 }
-```
+- **Text size (%)**: 50 to 200, default 100.
+- **Card size (%)**: 50 to 200, default 100. Scales the padding and spacing of each task card.
+- **Maximum tasks**: an upper limit, 1 to 50. The tile never draws more rows than fit.
 
 Tasks are the open ones across every project you can access: dated tasks first, soonest due first, then undated ones. Only the
 first 200 open tasks are read. The list refreshes once a minute.

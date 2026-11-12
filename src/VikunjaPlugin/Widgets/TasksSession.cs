@@ -14,10 +14,10 @@ internal sealed class TasksSession : IUiSession
 	private readonly TaskStore _store;
 	private IUiEventOrigin? _origin;
 
-	public TasksSession(UiSurface surface, TaskStore store, int maxTasks, bool checkable)
+	public TasksSession(UiSurface surface, TaskStore store, WidgetSettings settings, bool checkable)
 	{
 		_store = store;
-		_view = new UiView(surface, TasksView.Build(store, maxTasks, checkable ? CompleteAsync : null));
+		_view = new UiView(surface, TasksView.Build(store, settings, checkable ? CompleteAsync : null));
 		_view.Changed += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
 		_view.HandlerFaulted += (_, fault)
 			=> Faulted?.Invoke(this, new UiSessionFaultedEventArgs(fault.Exception.Message, fault.Exception));
