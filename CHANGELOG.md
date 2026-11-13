@@ -4,6 +4,14 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 follow [Semantic Versioning](https://semver.org/). A change that breaks existing widgets or settings is marked
 **Breaking**.
 
+## [1.0.0-beta.2] - 2026-11-13
+
+### Changed
+
+- New plugin icon: a task list with one task done, and a V.
+- The plugin description now says a Vikunja server and an API token are required.
+- README: the install name points to this version and there is a "Testers wanted" section.
+
 ## [1.0.0-beta.1] - 2026-11-13
 
 First beta.
@@ -20,4 +28,5 @@ First beta.
 
 See the Limitations section of the [README](README.md).
 
+[1.0.0-beta.2]: https://github.com/EddyVenus/Vikunja-MD3-Plugin/releases/tag/v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/EddyVenus/Vikunja-MD3-Plugin/releases/tag/v1.0.0-beta.1
