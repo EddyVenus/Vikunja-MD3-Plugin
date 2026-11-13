@@ -1,0 +1,20 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    # A GitHub release starts a Store upload and burns its version number, so betas are published as prereleases and skipped here.
+    if: ${{ !github.event.release.prerelease }}
+    uses: Macro-Deck-App/GitHub-Actions/.github/workflows/publish-plugin.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      version: ${{ github.event.release.tag_name }}
+      source: src/VikunjaPlugin
+      # Pinned to the SDK version; the workflow default resolves the CLI by SemVer order and can pick an older preview.
+      cli-version: 3.0.1
+      changelog: ${{ github.event.release.body }}

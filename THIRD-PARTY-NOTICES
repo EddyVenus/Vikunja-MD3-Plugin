@@ -1,0 +1,63 @@
+# Third-party notices
+
+This plugin ships the following packages. Each is licensed under the Apache License 2.0, whose text is at https://www.apache.org/licenses/LICENSE-2.0.
+
+## MacroDeck.Localization 3.0.1
+
+- License: Apache-2.0
+- Copyright: Copyright (c) Macro Deck
+- Source: https://github.com/Macro-Deck-App/Macro-Deck
+
+## MacroDeck.Plugin.Hosting 3.0.1
+
+- License: Apache-2.0
+- Copyright: Copyright (c) Macro Deck
+- Source: https://github.com/Macro-Deck-App/Macro-Deck
+
+## MacroDeck.Plugin.Protocol 3.0.1
+
+- License: Apache-2.0
+- Copyright: Copyright (c) Macro Deck
+- Source: https://github.com/Macro-Deck-App/Macro-Deck
+
+## MacroDeck.Plugin.Serilog 3.0.1
+
+- License: Apache-2.0
+- Copyright: Copyright (c) Macro Deck
+- Source: https://github.com/Macro-Deck-App/Macro-Deck
+
+## MacroDeck.Sdk 3.0.1
+
+- License: Apache-2.0
+- Copyright: Copyright (c) Macro Deck
+- Source: https://github.com/Macro-Deck-App/Macro-Deck
+
+## MacroDeck.Ui 3.0.1
+
+- License: Apache-2.0
+- Copyright: Copyright (c) Macro Deck
+- Source: https://github.com/Macro-Deck-App/Macro-Deck
+
+## MacroDeck.Ui.Model 3.0.1
+
+- License: Apache-2.0
+- Copyright: Copyright (c) Macro Deck
+- Source: https://github.com/Macro-Deck-App/Macro-Deck
+
+## Serilog 4.4.0
+
+- License: Apache-2.0
+- Copyright: Copyright © Serilog Contributors
+- Source: https://github.com/serilog/serilog
+
+## Serilog.Extensions.Hosting 10.0.0
+
+- License: Apache-2.0
+- Copyright: Microsoft,Serilog Contributors
+- Source: https://github.com/serilog/serilog-extensions-hosting
+
+## Serilog.Extensions.Logging 10.0.0
+
+- License: Apache-2.0
+- Copyright: Microsoft,Serilog Contributors
+- Source: https://github.com/serilog/serilog-extensions-logging

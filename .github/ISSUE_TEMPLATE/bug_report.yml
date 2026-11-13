@@ -1,0 +1,59 @@
+name: Bug report
+description: Something does not work as the README says
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Remove your server's address and never paste your API token** in this form, in logs or in screenshots.
+        For a security problem use the private "Report a vulnerability" link on the Security tab instead.
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      placeholder: 1.0.0-beta.1
+    validations:
+      required: true
+  - type: input
+    id: macro-deck-version
+    attributes:
+      label: Macro Deck version
+    validations:
+      required: true
+  - type: input
+    id: vikunja-version
+    attributes:
+      label: Vikunja version
+      description: Settings, About in Vikunja, or the "version" field at /api/v1/info.
+    validations:
+      required: true
+  - type: dropdown
+    id: widget
+    attributes:
+      label: Widget
+      options:
+        - Read only
+        - Checklist
+        - Both / not sure
+    validations:
+      required: true
+  - type: input
+    id: tile-size
+    attributes:
+      label: Tile size and settings
+      description: For example 1x2, text size 100, card size 100, square tiles show Counter.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log lines or screenshot
+      description: Remove the server address and anything that looks like a token first.

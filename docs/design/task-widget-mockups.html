@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vikunja Tasks widget mockups</title>
+<style>
+	:root {
+		--page: #0f1012;
+		--panel: #17181b;
+		--tile: #0c0c0d;
+		--text: #f2f3f5;
+		--muted: #9aa0a6;
+		--line: #ffffff1f;
+		--accent: #3b9cff;
+		--high: #ff5a5f;
+		--mid: #ffa94d;
+		--low: #51cf66;
+		--none: #6b7078;
+		--cell: 120px;
+		--gap: 12px;
+	}
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		padding: 32px 16px 64px;
+		background: var(--page);
+		color: var(--text);
+		font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+	}
+	main { max-width: 1240px; margin: 0 auto; }
+	h1 { font-size: 26px; margin: 0 0 8px; }
+	h2 { font-size: 20px; margin: 0 0 4px; }
+	.lead { color: var(--muted); max-width: 70ch; margin: 0 0 8px; }
+	.note { color: var(--muted); font-size: 13px; margin: 0 0 28px; }
+	section.design {
+		background: var(--panel);
+		border: 1px solid var(--line);
+		border-radius: 18px;
+		padding: 22px 22px 26px;
+		margin: 0 0 28px;
+	}
+	.design p { color: var(--muted); margin: 0 0 18px; max-width: 80ch; }
+	.row-title {
+		font-size: 12px;
+		letter-spacing: .08em;
+		text-transform: uppercase;
+		color: var(--muted);
+		margin: 18px 0 10px;
+	}
+	.shelf { display: flex; flex-wrap: wrap; gap: 22px 24px; align-items: flex-start; zoom: 1.35; }
+	figure { margin: 0; }
+	figcaption { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+	.tile {
+		position: relative;
+		overflow: hidden;
+		background: var(--tile);
+		border-radius: 22px;
+		box-shadow: 0 0 0 1px #ffffff2e;
+		container-type: size;
+		color: var(--text);
+		font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+	}
+	.stack { position: absolute; inset: 5cqmin; display: flex; flex-direction: column; gap: 2cqmin; min-height: 0; }
+	.t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.muted { color: var(--muted); }
+	.fill { flex: 1 1 0; min-width: 0; }
+
+	/* A: cards */
+	.card { display: flex; align-items: center; gap: 2cqmin; border-radius: 5cqmin; background: #ffffff1f; padding: 2.5cqmin; font-size: 8.5cqmin; line-height: 1; }
+	.card.btn { background: var(--accent); }
+
+	/* B: minimal list */
+	.min-row { display: flex; align-items: center; gap: 3cqmin; font-size: 8cqmin; line-height: 1; padding: 2.4cqmin 0; border-bottom: 1px solid var(--line); }
+	.min-row:last-child { border-bottom: 0; }
+	.ring { flex: none; width: 7cqmin; height: 7cqmin; border-radius: 50%; border: .9cqmin solid var(--muted); }
+	.dot { flex: none; width: 3.2cqmin; height: 3.2cqmin; border-radius: 50%; }
+	.due { flex: none; font-size: 6cqmin; color: var(--muted); }
+	.due.late { color: var(--high); }
+	.head { display: flex; align-items: baseline; justify-content: space-between; font-size: 6.5cqmin; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+
+	/* C: counter */
+	.big { font-weight: 700; line-height: .9; letter-spacing: -.02em; }
+	.pill { display: inline-flex; align-items: center; justify-content: center; border-radius: 99px; background: var(--accent); color: #fff; font-weight: 600; }
+
+	/* D: focus */
+	.focus { border-radius: 6cqmin; background: linear-gradient(135deg, #2b6cee, #7a3cf0); padding: 4cqmin; display: flex; flex-direction: column; justify-content: space-between; gap: 2cqmin; min-height: 0; }
+	.focus.ro { background: linear-gradient(135deg, #2e3138, #3a3f48); }
+	.check-circle { flex: none; border-radius: 50%; background: #ffffff2e; display: grid; place-items: center; font-weight: 700; }
+
+	/* E: priority bars */
+	.bar-row { display: flex; align-items: stretch; gap: 2.5cqmin; background: #ffffff14; border-radius: 4cqmin; overflow: hidden; font-size: 8cqmin; line-height: 1; }
+	.bar { flex: none; width: 2cqmin; }
+	.bar-body { flex: 1 1 0; min-width: 0; padding: 2.4cqmin 0; display: flex; align-items: center; gap: 3cqmin; }
+	.bar-end { flex: none; display: grid; place-items: center; padding-right: 3cqmin; }
+	.box { width: 7cqmin; height: 7cqmin; border-radius: 2cqmin; border: .9cqmin solid var(--muted); }
+</style>
+</head>
+<body>
+<main>
+	<h1>Vikunja Tasks: widget design mockups</h1>
+	<p class="lead">Visual ideas only, drawn in HTML. Nothing here is implemented in the plugin. Every tile uses Macro Deck deck-cell proportions (120 px cell, 12 px gap) and lengths relative to the tile's smaller side, like the real widget does.</p>
+	<p class="note">Sizes shown: 1x1, 2x1, 1x2, 2x2 and 4x2. "Read only" tiles have nothing to press. "Checklist" tiles show what pressing does.</p>
+	<div id="designs"></div>
+</main>
+
+<script>
+const CELL = 120;
+const GAP = 12;
+const SIZES = [[1, 1], [2, 1], [1, 2], [2, 2], [4, 2]];
+const TASKS = [
+	{ t: "Buy milk", due: "Today", p: 3, late: false },
+	{ t: "Call the dentist to reschedule", due: "Tomorrow", p: 2, late: false },
+	{ t: "Pay electricity bill", due: "Overdue", p: 3, late: true },
+	{ t: "Review pull request", due: "Fri", p: 1, late: false },
+	{ t: "Water plants", due: "", p: 0, late: false },
+	{ t: "Book train tickets", due: "Mon", p: 2, late: false },
+	{ t: "Backup photos", due: "", p: 0, late: false },
+	{ t: "Renew passport", due: "Dec 12", p: 1, late: false },
+	{ t: "Clean the garage", due: "", p: 0, late: false },
+	{ t: "Send invoice", due: "Today", p: 2, late: false },
+	{ t: "Plan trip", due: "", p: 0, late: false },
+	{ t: "Read book", due: "", p: 0, late: false },
+];
+const PRIORITY = ["var(--none)", "var(--low)", "var(--mid)", "var(--high)"];
+const TOTAL_OPEN = 12;
+
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function dims(cols, rows) {
+	const w = cols * CELL + (cols - 1) * GAP;
+	const h = rows * CELL + (rows - 1) * GAP;
+	const basis = Math.min(w, h);
+	return { cols, rows, w, h, basis, hb: h / basis, wb: w / basis };
+}
+
+// Rows that fit, in the same way the plugin computes them: usable height over row pitch, both in tile bases.
+const rowsFit = (hb, rowHeight, gap, pad = 0.1) => Math.max(1, Math.floor((hb - pad + gap) / (rowHeight + gap)));
+
+/* ---------- A: cards ---------- */
+function cards(d, check) {
+	const n = Math.min(rowsFit(d.hb, 0.135 * (check ? 1.1 : 1), 0.02), TASKS.length);
+	const rows = TASKS.slice(0, n).map((k) =>
+		`<div class="card ${check ? "btn" : ""}">${check ? '<span class="muted" style="color:#fff">[ ]</span>' : ""}<span class="t fill">${esc(k.t)}</span></div>`
+	).join("");
+	return `<div class="stack">${rows}</div>`;
+}
+
+/* ---------- B: minimal list ---------- */
+function minimal(d, check) {
+	const showHead = d.rows >= 2;
+	const n = Math.min(rowsFit(d.hb, 0.14, 0, showHead ? 0.22 : 0.1), TASKS.length);
+	const showDue = d.cols >= 2;
+	const rows = TASKS.slice(0, n).map((k) => {
+		const lead = check ? '<span class="ring"></span>' : `<span class="dot" style="background:${PRIORITY[k.p]}"></span>`;
+		const due = showDue && k.due ? `<span class="due ${k.late ? "late" : ""}">${k.due}</span>` : "";
+		return `<div class="min-row">${lead}<span class="t fill">${esc(k.t)}</span>${due}</div>`;
+	}).join("");
+	const head = showHead ? `<div class="head"><span>Tasks</span><span>${TOTAL_OPEN} open</span></div>` : "";
+	return `<div class="stack" style="gap:1cqmin">${head}${rows}</div>`;
+}
+
+/* ---------- C: counter + next task ---------- */
+function counter(d, check) {
+	const next = TASKS[0];
+	const action = check ? '<span class="pill" style="font-size:6cqmin;padding:1.6cqmin 4cqmin">Tap: done</span>' : "";
+	if (d.cols === 1 && d.rows === 1) {
+		return `<div class="stack" style="justify-content:space-between">
+			<div><div class="big" style="font-size:34cqmin">${TOTAL_OPEN}</div><div class="muted" style="font-size:8cqmin">open tasks</div></div>
+			<div><div class="t" style="font-size:8cqmin">${esc(next.t)}</div>${action ? `<div style="margin-top:2cqmin">${action}</div>` : ""}</div>
+		</div>`;
+	}
+	if (d.cols >= 2 && d.rows === 1) {
+		const list = TASKS.slice(0, 2).map((k) => `<div class="t" style="font-size:8cqmin">${esc(k.t)}</div>`).join("");
+		return `<div class="stack" style="flex-direction:row;align-items:center;gap:5cqmin">
+			<div><div class="big" style="font-size:44cqmin">${TOTAL_OPEN}</div><div class="muted" style="font-size:8cqmin">open</div></div>
+			<div class="fill" style="display:flex;flex-direction:column;gap:3cqmin;border-left:1px solid var(--line);padding-left:5cqmin">${list}${action}</div>
+		</div>`;
+	}
+	const n = Math.min(rowsFit(d.hb - 0.4, 0.135 * (check ? 1.1 : 1), 0.02), TASKS.length);
+	const rows = TASKS.slice(0, n).map((k) => `<div class="card ${check ? "btn" : ""}" style="font-size:8cqmin">${check ? '<span style="color:#fff">[ ]</span>' : ""}<span class="t fill">${esc(k.t)}</span></div>`).join("");
+	return `<div class="stack">
+		<div style="display:flex;align-items:baseline;gap:3cqmin"><span class="big" style="font-size:20cqmin">${TOTAL_OPEN}</span><span class="muted" style="font-size:8cqmin">open tasks</span></div>
+		${rows}</div>`;
+}
+
+/* ---------- D: focus on the next task ---------- */
+function focus(d, check) {
+	const next = TASKS[0];
+	const small = d.cols === 1 && d.rows === 1;
+	const circle = check ? `<span class="check-circle" style="width:${small ? 20 : 12}cqmin;height:${small ? 20 : 12}cqmin;font-size:${small ? 12 : 7}cqmin">OK</span>` : "";
+	if (small) {
+		return `<div class="stack"><div class="focus ${check ? "" : "ro"} fill">
+			<div class="muted" style="font-size:6.5cqmin;color:#ffffffb3">NEXT</div>
+			<div style="font-size:11cqmin;line-height:1.1;font-weight:600;overflow:hidden">${esc(next.t)}</div>
+			<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:6.5cqmin;color:#ffffffb3">${next.due}</span>${circle}</div>
+		</div></div>`;
+	}
+	const rest = Math.min(rowsFit(d.hb - 0.62, 0.1, 0.012, 0.05), TASKS.length - 1);
+	const restRows = d.cols >= 2 && d.rows === 1 ? "" : TASKS.slice(1, 1 + Math.max(0, rest)).map((k) => `<div class="min-row" style="font-size:7.5cqmin;padding:1.8cqmin 0"><span class="dot" style="background:${PRIORITY[k.p]}"></span><span class="t fill">${esc(k.t)}</span></div>`).join("");
+	const wide = d.cols >= 2 && d.rows === 1;
+	return `<div class="stack" style="${wide ? "flex-direction:row" : ""}">
+		<div class="focus ${check ? "" : "ro"}" style="${wide ? "flex:1 1 0" : "flex:none;height:" + (d.hb >= 1.9 ? 46 : 52) + "cqmin"}">
+			<div style="display:flex;justify-content:space-between"><span style="font-size:6.5cqmin;color:#ffffffb3">NEXT UP</span><span style="font-size:6.5cqmin;color:#ffffffb3">${next.due}</span></div>
+			<div style="font-size:${wide ? 12 : 10}cqmin;line-height:1.1;font-weight:600;overflow:hidden">${esc(next.t)}</div>
+			${check ? `<span class="pill" style="align-self:flex-start;font-size:6.5cqmin;padding:1.8cqmin 5cqmin;background:#ffffff33">Mark done</span>` : ""}
+		</div>
+		${wide ? `<div class="fill" style="display:flex;flex-direction:column;justify-content:center">${TASKS.slice(1, 4).map((k) => `<div class="min-row" style="font-size:7.5cqmin"><span class="dot" style="background:${PRIORITY[k.p]}"></span><span class="t fill">${esc(k.t)}</span></div>`).join("")}</div>` : `<div style="display:flex;flex-direction:column">${restRows}</div>`}
+	</div>`;
+}
+
+/* ---------- E: priority bars ---------- */
+function bars(d, check) {
+	const n = Math.min(rowsFit(d.hb, 0.125, 0.02), TASKS.length);
+	const showDue = d.cols >= 2;
+	const rows = TASKS.slice(0, n).map((k) => {
+		const sub = showDue && k.due ? `<span class="due ${k.late ? "late" : ""}" style="font-size:6cqmin">${k.due}</span>` : "";
+		return `<div class="bar-row"><span class="bar" style="background:${PRIORITY[k.p]}"></span>
+			<div class="bar-body"><span class="t fill">${esc(k.t)}</span>${sub}</div>
+			${check ? '<span class="bar-end"><span class="box"></span></span>' : ""}</div>`;
+	}).join("");
+	return `<div class="stack">${rows}</div>`;
+}
+
+/* ---------- F: B everywhere, C on the 1x1 ---------- */
+const countOnly = () => `<div class="stack" style="justify-content:center;align-items:center;text-align:center;gap:3cqmin">
+	<div class="big" style="font-size:44cqmin">${TOTAL_OPEN}</div><div class="muted" style="font-size:9cqmin">open tasks</div></div>`;
+const merged = (d, check) => (d.cols === 1 && d.rows === 1 && d.mode !== "list" ? countOnly() : minimal(d, check));
+
+const DESIGNS = [
+	{ id: "F", name: "F. Minimal list, with a 1x1 setting", text: "Design B at 2x1, 1x2, 2x2 and 4x2. The widget configuration gets a \"1x1 display\" option with two choices, shown below as the two 1x1 tiles: Counter (only the open-task count, centered) or List (the same list as bigger tiles, fewer rows, no due dates). It only affects 1x1 tiles.", draw: merged, sizes: [[1, 1, "counter"], [1, 1, "list"], [2, 1], [1, 2], [2, 2], [4, 2]] },
+	{ id: "A", name: "A. Cards (current look)", text: "What the plugin draws today: one rounded card per task. Pressable cards use the standard Macro Deck button style.", draw: cards },
+	{ id: "B", name: "B. Minimal list", text: "Lighter than cards: thin dividers, a priority dot (read only) or an empty circle (checklist), due dates when the tile is wide, and a small header when it is tall.", draw: minimal },
+	{ id: "C", name: "C. Counter + next task", text: "Leads with how many tasks are open. On a 1x1 it shows only the count and the next task, which is the useful part of a tile that small.", draw: counter },
+	{ id: "D", name: "D. Focus on the next task", text: "One highlighted card for the task to do next, with a large mark-done button on the checklist version, and the rest of the queue as a quiet list underneath.", draw: focus },
+	{ id: "E", name: "E. Priority bars", text: "A colored bar at the left edge shows priority, a due label appears when the tile is wide, and the checklist version puts a checkbox on the right.", draw: bars },
+];
+
+function tile(draw, cols, rows, check, mode) {
+	const d = { ...dims(cols, rows), mode };
+	return `<figure><div class="tile" style="width:${d.w}px;height:${d.h}px">${draw(d, check)}</div><figcaption>${cols}x${rows}${mode ? " · " + mode : ""}</figcaption></figure>`;
+}
+
+document.getElementById("designs").innerHTML = DESIGNS.map((g) => `
+	<section class="design" id="design-${g.id}">
+		<h2>${g.name}</h2>
+		<p>${g.text}</p>
+		<div class="row-title">Read only</div>
+		<div class="shelf">${(g.sizes || SIZES).map(([c, r, m]) => tile(g.draw, c, r, false, m)).join("")}</div>
+		<div class="row-title">Checklist (press a task to mark it done)</div>
+		<div class="shelf">${(g.sizes || SIZES).map(([c, r, m]) => tile(g.draw, c, r, true, m)).join("")}</div>
+	</section>`).join("");
+</script>
+</body>
+</html>

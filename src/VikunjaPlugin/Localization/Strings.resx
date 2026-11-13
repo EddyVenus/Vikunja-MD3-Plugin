@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- The default-language file. Every translation is checked against it and the fallback chain ends
+       here, so it is required even for a plugin that ships one language. Add a language by adding
+       Localization/Strings.<culture>.resx beside it (Strings.de.resx, Strings.pt-BR.resx).
+       A dotted key becomes a nested class: Actions.LogMessage.Name is Strings.Actions.LogMessage.Name(). -->
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Widgets.ReadOnly.Name" xml:space="preserve">
+    <value>Vikunja tasks (read only)</value>
+  </data>
+  <data name="Widgets.ReadOnly.Description" xml:space="preserve">
+    <value>Lists your open Vikunja tasks.</value>
+  </data>
+  <data name="Widgets.Checklist.Name" xml:space="preserve">
+    <value>Vikunja tasks (checklist)</value>
+  </data>
+  <data name="Widgets.Checklist.Description" xml:space="preserve">
+    <value>Lists your open Vikunja tasks. Press a task to mark it as done.</value>
+  </data>
+  <data name="Widgets.Empty" xml:space="preserve">
+    <value>No open tasks</value>
+  </data>
+  <data name="Widgets.Loading" xml:space="preserve">
+    <value>Loading tasks</value>
+  </data>
+  <data name="Widgets.NotConfigured" xml:space="preserve">
+    <value>Vikunja is not set up</value>
+  </data>
+  <data name="Widgets.Unavailable" xml:space="preserve">
+    <value>Vikunja is unreachable</value>
+  </data>
+  <data name="ConfigFlow.Title" xml:space="preserve">
+    <value>Connect to Vikunja</value>
+  </data>
+  <data name="ConfigFlow.Description" xml:space="preserve">
+    <value>Enter the address of your Vikunja instance and an API token. Use https unless Vikunja is on your own network.</value>
+  </data>
+  <data name="ConfigFlow.TokenInstruction" xml:space="preserve">
+    <value>In Vikunja go to Settings, API Tokens and create a token with only these permissions under Tasks: Read all, Read one and Update.</value>
+  </data>
+  <data name="ConfigFlow.UnknownStep" xml:space="preserve">
+    <value>Unknown configuration step.</value>
+  </data>
+  <data name="ConfigFlow.ServerUrl.Label" xml:space="preserve">
+    <value>Vikunja address</value>
+  </data>
+  <data name="ConfigFlow.Token.Label" xml:space="preserve">
+    <value>API token</value>
+  </data>
+  <data name="Errors.NotConfigured" xml:space="preserve">
+    <value>Vikunja is not configured yet.</value>
+  </data>
+  <data name="Errors.Unauthorized" xml:space="preserve">
+    <value>Vikunja rejected the API token.</value>
+  </data>
+  <data name="Errors.Unreachable" xml:space="preserve">
+    <value>Vikunja could not be reached.</value>
+  </data>
+  <data name="Errors.Timeout" xml:space="preserve">
+    <value>Vikunja did not answer in time.</value>
+  </data>
+  <data name="Errors.NotVikunja" xml:space="preserve">
+    <value>The address answered, but not like Vikunja. Check the address and the Vikunja version.</value>
+  </data>
+  <data name="Errors.Rejected" xml:space="preserve">
+    <value>Vikunja refused the request.</value>
+  </data>
+  <data name="Config.FontSize.Label" xml:space="preserve">
+    <value>Text size (%)</value>
+  </data>
+  <data name="Config.FontSize.Description" xml:space="preserve">
+    <value>Scales the task text. 100 is the default.</value>
+  </data>
+  <data name="Config.CardSize.Label" xml:space="preserve">
+    <value>Card size (%)</value>
+  </data>
+  <data name="Config.CardSize.Description" xml:space="preserve">
+    <value>Scales the padding and spacing of each task card. 100 is the default.</value>
+  </data>
+  <data name="Config.SquareDisplay.Label" xml:space="preserve">
+    <value>Square tiles show</value>
+  </data>
+  <data name="Config.SquareDisplay.Description" xml:space="preserve">
+    <value>What a square tile (1x1, 2x2...) draws: the task list, or only how many tasks are open. Other shapes always show the list.</value>
+  </data>
+  <data name="Config.SquareDisplay.List" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="Config.SquareDisplay.Counter" xml:space="preserve">
+    <value>Counter</value>
+  </data>
+  <data name="Widgets.Header" xml:space="preserve">
+    <value>Tasks</value>
+  </data>
+  <data name="Widgets.OpenTasks" xml:space="preserve">
+    <value>open tasks</value>
+  </data>
+  <data name="Widgets.Due.Overdue" xml:space="preserve">
+    <value>Overdue</value>
+  </data>
+  <data name="Widgets.Due.Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Widgets.Due.Tomorrow" xml:space="preserve">
+    <value>Tomorrow</value>
+  </data>
+</root>
