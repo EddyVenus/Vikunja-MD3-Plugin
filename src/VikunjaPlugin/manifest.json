@@ -3,7 +3,7 @@
   "manifestVersion": 1,
   "id": "com.eddyvenus.vikunja",
   "name": "Vikunja Tasks",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "Show your Vikunja tasks in a Macro Deck widget and check them off. Requires access to a Vikunja server and an API token.",
   "icon": "Assets/icon.svg",
   "entrypoints": {

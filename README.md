@@ -2,7 +2,7 @@
 
 Show your open [Vikunja](https://vikunja.io) tasks on a Macro Deck widget and mark them as done from the deck.
 
-> **Beta.** This is the first beta (1.0.0-beta.1). Expect rough edges, and please
+> **Beta.** This is a beta (1.0.0-beta.2). Expect rough edges, and please
 > [report problems](#reporting-problems).
 
 ## Requirements
@@ -39,7 +39,7 @@ logged once per episode.
 
 ## Install
 
-1. Download `com.eddyvenus.vikunja-1.0.0-beta.1.macroDeckPlugin` from the
+1. Download `com.eddyvenus.vikunja-1.0.0-beta.2.macroDeckPlugin` from the
    [Releases](https://github.com/EddyVenus/Vikunja-MD3-Plugin/releases) page.
 2. In Macro Deck open the **Integrations** tab and install the downloaded file from there.
 
