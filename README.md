@@ -88,6 +88,11 @@ macrodeck-plugin build --source src/VikunjaPlugin --output ./artifacts
 To try it in a real Macro Deck, use the "Macro Deck - Real Host" launch profile. `AGENTS.md` has the rules for changing
 the code and the Store gate every release has to pass.
 
+## Testers wanted
+
+This is a beta. If you use Vikunja and Macro Deck 3, I would like to hear whether it works on your setup, and also when it
+does. Tell me your Vikunja version, your Windows version and anything odd, through an issue (see below).
+
 ## Reporting problems
 
 Open an [issue](https://github.com/EddyVenus/Vikunja-MD3-Plugin/issues/new/choose) and say which versions of the plugin,
