@@ -70,6 +70,9 @@ sent anywhere else. An `http://` address is accepted for local networks, but the
 - Vikunja behind a login proxy that intercepts API calls (Authelia, Cloudflare Access and similar) is not supported: the
   API must answer requests that carry the token.
 - At most 200 open tasks are read. A hardware deck cannot change page, because it has no swipe.
+- Beta updates are manual. A plugin installed from a file gets no update notice: watch the repository's Releases
+  (Watch, Custom, Releases) and install each new `.macroDeckPlugin` over the old one.
+- No support policy yet. A future Macro Deck release may break the plugin until a new version is published.
 
 ## Development
 
