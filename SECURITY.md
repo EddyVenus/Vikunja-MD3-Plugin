@@ -6,7 +6,7 @@ Please do **not** open a public issue for a security problem. Use GitHub's priva
 [Security tab](https://github.com/EddyVenus/Vikunja-MD3-Plugin/security) of this repository and choose "Report a
 vulnerability". Say what you found, how to reproduce it and which plugin version you used.
 
-This is a beta maintained by one person, so replies are best effort. You will get an acknowledgement as soon as
+This plugin is maintained by one person, so replies are best effort. You will get an acknowledgement as soon as
 possible, and a fix goes out as a new version.
 
 ## What the plugin handles

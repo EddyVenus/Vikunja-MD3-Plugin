@@ -54,6 +54,10 @@ jobs:
       - name: Install the plugin CLI
         run: dotnet tool install --global MacroDeck.Plugin.Cli --version 3.0.1
 
+      # The Store's official workflow runs the tests on Linux, so run them here too.
+      - name: Test on Linux
+        run: dotnet test VikunjaPlugin.slnx -c Release
+
       - name: Build the package
         run: macrodeck-plugin build --source src/VikunjaPlugin --output ./artifacts
 

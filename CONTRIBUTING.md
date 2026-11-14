@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping. This is a beta maintained by one person, so replies are best effort.
+Thanks for helping. This plugin is maintained by one person, so replies are best effort.
 
 ## Reporting a bug
 
