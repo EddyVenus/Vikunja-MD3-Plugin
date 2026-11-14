@@ -4,6 +4,15 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 follow [Semantic Versioning](https://semver.org/). A change that breaks existing widgets or settings is marked
 **Breaking**.
 
+## [1.0.0] - 2026-11-13
+
+First stable release, for the Macro Deck Store. The code is the same as 1.0.0-beta.2.
+
+### Changed
+
+- The plugin description now also states the Vikunja version, the token access, the 200-task limit and Windows x64.
+- README: beta wording removed, install points to the Store, "Testers wanted" is now "Feedback".
+
 ## [1.0.0-beta.2] - 2026-11-13
 
 ### Changed
@@ -28,5 +37,6 @@ First beta.
 
 See the Limitations section of the [README](README.md).
 
+[1.0.0]: https://github.com/EddyVenus/Vikunja-MD3-Plugin/releases/tag/v1.0.0
 [1.0.0-beta.2]: https://github.com/EddyVenus/Vikunja-MD3-Plugin/releases/tag/v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/EddyVenus/Vikunja-MD3-Plugin/releases/tag/v1.0.0-beta.1

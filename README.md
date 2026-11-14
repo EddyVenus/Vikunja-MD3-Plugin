@@ -2,8 +2,12 @@
 
 Show your open [Vikunja](https://vikunja.io) tasks on a Macro Deck widget and mark them as done from the deck.
 
-> **Beta.** This is a beta (1.0.0-beta.2). Expect rough edges, and please
-> [report problems](#reporting-problems).
+<a href="https://macro-deck.app/store/com.eddyvenus.vikunja">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://assets.macro-deck.app/branding/Open%20in%20the%20Macro%20Deck%20Store%20Badge%20Dark.png">
+    <img alt="Open in the Macro Deck Store" src="https://assets.macro-deck.app/branding/Open%20in%20the%20Macro%20Deck%20Store%20Badge%20Light.png" height="56">
+  </picture>
+</a>
 
 ## Requirements
 
@@ -39,11 +43,11 @@ logged once per episode.
 
 ## Install
 
-1. Download `com.eddyvenus.vikunja-1.0.0-beta.2.macroDeckPlugin` from the
-   [Releases](https://github.com/EddyVenus/Vikunja-MD3-Plugin/releases) page.
-2. In Macro Deck open the **Integrations** tab and install the downloaded file from there.
+Install it from the Macro Deck Store.
 
-Once the plugin is listed in the Macro Deck Store, install it from the Store instead.
+To install from a file instead, download `com.eddyvenus.vikunja-<version>.macroDeckPlugin` from the
+[Releases](https://github.com/EddyVenus/Vikunja-MD3-Plugin/releases) page, open the **Integrations** tab in Macro Deck and
+install the file from there.
 
 ## Setup
 
@@ -70,9 +74,9 @@ sent anywhere else. An `http://` address is accepted for local networks, but the
 - Vikunja behind a login proxy that intercepts API calls (Authelia, Cloudflare Access and similar) is not supported: the
   API must answer requests that carry the token.
 - At most 200 open tasks are read. A hardware deck cannot change page, because it has no swipe.
-- Beta updates are manual. A plugin installed from a file gets no update notice: watch the repository's Releases
-  (Watch, Custom, Releases) and install each new `.macroDeckPlugin` over the old one.
-- This is a beta maintained by one person: there are no guaranteed response times. A future Macro Deck release may break the plugin until a new version is published.
+- A plugin installed from a file gets no update notice: watch the repository's Releases (Watch, Custom, Releases) and
+  install each new `.macroDeckPlugin` over the old one. Installed from the Store, it updates through the Store.
+- The plugin is maintained by one person: there are no guaranteed response times. A future Macro Deck release may break the plugin until a new version is published.
 
 ## Development
 
@@ -88,10 +92,10 @@ macrodeck-plugin build --source src/VikunjaPlugin --output ./artifacts
 To try it in a real Macro Deck, use the "Macro Deck - Real Host" launch profile. `AGENTS.md` has the rules for changing
 the code and the Store gate every release has to pass.
 
-## Testers wanted
+## Feedback
 
-This is a beta. If you use Vikunja and Macro Deck 3, I would like to hear whether it works on your setup, and also when it
-does. Tell me your Vikunja version, your Windows version and anything odd, through an issue (see below).
+I would like to hear whether it works on your setup, and also when it does. Tell me your Vikunja version, your Windows
+version and anything odd, through an issue (see below).
 
 ## Reporting problems
 
