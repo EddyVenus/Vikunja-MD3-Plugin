@@ -4,7 +4,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 follow [Semantic Versioning](https://semver.org/). A change that breaks existing widgets or settings is marked
 **Breaking**.
 
-## [2.0.0] - Unreleased
+## [2.0.0] - 2026-11-22
 
 ### Changed
 
