@@ -13,8 +13,8 @@ Show your open [Vikunja](https://vikunja.io) tasks on a Macro Deck widget and ma
 
 - **Macro Deck** 3.0.0 or newer, on Windows (x64). macOS and Linux are not built or tested. Macro Deck provides the .NET
   runtime, so there is nothing else to install.
-- **Vikunja** 0.24.0 or newer, with API tokens available. Tested with Vikunja 2.4.0. The plugin uses the query-based task
-  filter introduced in 0.24.0.
+- **Vikunja** 2.7.1 or newer, with API tokens available. Tested with Vikunja 2.7.1 and the latest release. The plugin uses
+  Vikunja's API v2. For an older Vikunja, update Vikunja or stay on plugin 1.0.0.
 - The computer that runs Macro Deck must be able to reach your Vikunja address.
 
 ## Widgets
@@ -51,8 +51,9 @@ install the file from there.
 
 ## Setup
 
-1. In Vikunja open Settings, API Tokens and create a token with only these permissions under Tasks: Read all, Read one
-   and Update. The plugin needs nothing else. An expiry date is optional: when it passes, the tiles show "Vikunja
+1. In Vikunja open Settings, API Tokens and create a token with only these permissions under Tasks: Read All and
+   Update. The plugin needs nothing else. A token made for plugin 1.0.0 also has Read One: it keeps working, and you
+   can remove that permission. An expiry date is optional: when it passes, the tiles show "Vikunja
    rejected the API token" and you create a new token and enter it again. To cut the plugin's access, delete the token
    in Vikunja.
 2. In Macro Deck add the Vikunja integration and enter the address of your instance (for example
@@ -67,8 +68,6 @@ sent anywhere else. An `http://` address is accepted for local networks, but the
 
 ## Limitations
 
-- Checking a task sends the whole task back with `done` set, as the Vikunja API requires. A task edited elsewhere
-  between the read and the write is overwritten with the values just read.
 - Only checking is supported. Unchecking, creating and editing tasks are not.
 - The list is shared by all widgets. Per-widget project or filter selection is not available yet.
 - Vikunja behind a login proxy that intercepts API calls (Authelia, Cloudflare Access and similar) is not supported: the
@@ -88,6 +87,9 @@ dotnet test -c Release
 macrodeck-plugin test --project src/VikunjaPlugin
 macrodeck-plugin build --source src/VikunjaPlugin --output ./artifacts
 ```
+
+The `Live` tests talk to a real Vikunja and are skipped unless `.github/scripts/seed-vikunja.sh` has prepared one; CI
+runs them against Vikunja 2.7.1 and the latest release on every pull request and once a week.
 
 To try it in a real Macro Deck, use the "Macro Deck - Real Host" launch profile. `AGENTS.md` has the rules for changing
 the code and the Store gate every release has to pass.

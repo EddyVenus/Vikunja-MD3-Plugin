@@ -54,16 +54,19 @@ internal sealed class VikunjaConfigFlow(VikunjaClient client) : IConfigFlow
 		});
 	}
 
-	/// <summary>Accepts the instance address with or without the API path and returns the API root.</summary>
+	/// <summary>Accepts the instance address with or without an API path and returns the API v2 root. Plugin 1.x stored the v1 root, so this also migrates saved entries.</summary>
 	internal static Uri? ToApiAddress(string input)
 	{
 		var trimmed = input.Trim().TrimEnd('/');
-		if (trimmed.EndsWith("/api/v1", StringComparison.OrdinalIgnoreCase))
+		foreach (var suffix in (ReadOnlySpan<string>)["/api/v1", "/api/v2"])
 		{
-			trimmed = trimmed[..^"/api/v1".Length];
+			if (trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+			{
+				trimmed = trimmed[..^suffix.Length];
+			}
 		}
 
-		return Uri.TryCreate($"{trimmed}/api/v1/", UriKind.Absolute, out var address)
+		return Uri.TryCreate($"{trimmed}/api/v2/", UriKind.Absolute, out var address)
 			&& address.Scheme is "http" or "https"
 			? address
 			: null;

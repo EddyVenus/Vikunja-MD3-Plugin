@@ -4,6 +4,9 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Weekly, so a new Vikunja release that breaks the plugin shows up before users report it.
+  schedule:
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
@@ -32,11 +35,45 @@ jobs:
         run: dotnet test VikunjaPlugin.slnx -c Release --no-build
 
       - name: Install the plugin CLI
-        run: dotnet tool install --global MacroDeck.Plugin.Cli --version 3.0.1
+        run: dotnet tool install --global MacroDeck.Plugin.Cli --version 3.0.5
 
       # Windows is the only platform this plugin declares and tests; keep manifest.json, macrodeck-build.json and this matrix identical.
       - name: Conformance
         run: macrodeck-plugin test --project src/VikunjaPlugin --required-only
+
+  live:
+    name: Live Vikunja ${{ matrix.vikunja }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest supported release (VikunjaClient.MinimumVersion) and the newest one.
+        vikunja: ["2.7.1", "latest"]
+    services:
+      vikunja:
+        image: vikunja/vikunja:${{ matrix.vikunja }}
+        ports:
+          - 3456:3456
+        env:
+          VIKUNJA_SERVICE_PUBLICURL: http://localhost:3456/
+          VIKUNJA_SERVICE_JWTSECRET: ci-only-secret
+          # The image's /app/vikunja is not writable without a mounted volume.
+          VIKUNJA_FILES_BASEPATH: /tmp/files
+          VIKUNJA_DATABASE_PATH: /tmp/vikunja.db
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Seed Vikunja
+        run: bash .github/scripts/seed-vikunja.sh http://localhost:3456
+
+      - name: Live tests
+        run: dotnet test VikunjaPlugin.slnx -c Release --filter Category=Live
 
   package:
     name: Pack and validate
@@ -52,7 +89,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Install the plugin CLI
-        run: dotnet tool install --global MacroDeck.Plugin.Cli --version 3.0.1
+        run: dotnet tool install --global MacroDeck.Plugin.Cli --version 3.0.5
 
       # The Store's official workflow runs the tests on Linux, so run them here too.
       - name: Test on Linux

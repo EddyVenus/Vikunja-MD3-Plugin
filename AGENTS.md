@@ -308,6 +308,11 @@ dotnet build
 dotnet test
 ```
 
+The `Live` test category runs against a real Vikunja and is skipped locally. CI's `live` job starts the Vikunja
+image, seeds it with `.github/scripts/seed-vikunja.sh` (a user, a task and a token with only the documented
+permissions) and runs them. Its matrix must hold `VikunjaClient.MinimumVersion` and `latest`: when the minimum moves,
+change both together, and when the documented token permissions change, change the seed script too.
+
 For an interactive verification, start the installed Macro Deck desktop app and debug the plugin with
 the **Macro Deck - Real Host** `.NET` launch profile. Keep the profile secret-free; supply a first-run
 enrollment token only through the project's local .NET User Secrets and remove it after registration.

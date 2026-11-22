@@ -7,4 +7,5 @@ public enum StoreStatus
 	NotConfigured,
 	Unavailable,
 	Unauthorized,
+	Outdated,
 }

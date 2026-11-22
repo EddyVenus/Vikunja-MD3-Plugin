@@ -24,12 +24,18 @@ internal sealed class FakeVikunja : HttpMessageHandler
 	public static HttpResponseMessage Json(string json, HttpStatusCode status = HttpStatusCode.OK)
 		=> new(status) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
 
+	/// <summary>An API v2 task list page around the given JSON array.</summary>
+	public static HttpResponseMessage Tasks(string items, long totalPages = 1)
+		=> Json($$"""{"items":{{items}},"total":0,"page":1,"per_page":50,"total_pages":{{totalPages}}}""");
+
+	public static HttpResponseMessage Info(string version = "v2.8.0") => Json($$"""{"version":"{{version}}"}""");
+
 	public TaskStore CreateStore(out VikunjaCredentials credentials, bool configured = true)
 	{
 		credentials = new VikunjaCredentials();
 		if (configured)
 		{
-			credentials.Apply(new Uri("https://vikunja.test/api/v1/"), "secret-token");
+			credentials.Apply(new Uri("https://vikunja.test/api/v2/"), "secret-token");
 		}
 
 		return new TaskStore(new VikunjaClient(new HttpClient(this), credentials), Serilog.Core.Logger.None);

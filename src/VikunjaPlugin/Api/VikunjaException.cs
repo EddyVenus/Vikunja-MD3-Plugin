@@ -10,6 +10,7 @@ public enum VikunjaFailure
 	Timeout,
 	Rejected,
 	NotVikunja,
+	Outdated,
 }
 
 public sealed class VikunjaException(VikunjaFailure reason, Exception? inner = null)
@@ -24,6 +25,7 @@ public sealed class VikunjaException(VikunjaFailure reason, Exception? inner = n
 		VikunjaFailure.Unreachable => Strings.Errors.Unreachable(),
 		VikunjaFailure.Timeout => Strings.Errors.Timeout(),
 		VikunjaFailure.NotVikunja => Strings.Errors.NotVikunja(),
+		VikunjaFailure.Outdated => Strings.Errors.Outdated(VikunjaClient.MinimumVersion.ToString()),
 		_ => Strings.Errors.Rejected(),
 	};
 }

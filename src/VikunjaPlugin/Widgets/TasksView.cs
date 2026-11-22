@@ -74,6 +74,7 @@ internal static class TasksView
 				Message("not-configured", store, StoreStatus.NotConfigured, Strings.Widgets.NotConfigured(), layout),
 				Message("unavailable", store, StoreStatus.Unavailable, Strings.Widgets.Unavailable(), layout),
 				Message("unauthorized", store, StoreStatus.Unauthorized, Strings.Errors.Unauthorized(), layout),
+				Message("outdated", store, StoreStatus.Outdated, Strings.Errors.Outdated(VikunjaClient.MinimumVersion.ToString()), layout),
 				new UiResponsive
 				{
 					Key = "list",
@@ -221,7 +222,7 @@ internal static class TasksView
 		},
 	};
 
-	private static bool IsStale(TaskStore store) => store.Status.Value is StoreStatus.Unavailable or StoreStatus.Unauthorized;
+	private static bool IsStale(TaskStore store) => store.Status.Value is StoreStatus.Unavailable or StoreStatus.Unauthorized or StoreStatus.Outdated;
 
 	/// <summary>Draws the tasks faded while they could not be refreshed, so they do not pass for current.</summary>
 	private static UiModifier Dimmed(TaskStore store, UiElement child) => new()
