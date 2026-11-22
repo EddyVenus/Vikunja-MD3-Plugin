@@ -57,6 +57,9 @@ jobs:
         env:
           VIKUNJA_SERVICE_PUBLICURL: http://localhost:3456/
           VIKUNJA_SERVICE_JWTSECRET: ci-only-secret
+          # The image's /app/vikunja is not writable without a mounted volume.
+          VIKUNJA_FILES_BASEPATH: /tmp/files
+          VIKUNJA_DATABASE_PATH: /tmp/vikunja.db
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
