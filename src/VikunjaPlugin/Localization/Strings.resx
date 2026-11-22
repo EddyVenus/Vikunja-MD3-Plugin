@@ -47,7 +47,7 @@
     <value>Enter the address of your Vikunja instance and an API token. Use https unless Vikunja is on your own network.</value>
   </data>
   <data name="ConfigFlow.TokenInstruction" xml:space="preserve">
-    <value>In Vikunja go to Settings, API Tokens and create a token with only these permissions under Tasks: Read all, Read one and Update.</value>
+    <value>In Vikunja go to Settings, API Tokens and create a token with only these permissions under Tasks: Read All and Update.</value>
   </data>
   <data name="ConfigFlow.UnknownStep" xml:space="preserve">
     <value>Unknown configuration step.</value>
@@ -72,6 +72,9 @@
   </data>
   <data name="Errors.NotVikunja" xml:space="preserve">
     <value>The address answered, but not like Vikunja. Check the address and the Vikunja version.</value>
+  </data>
+  <data name="Errors.Outdated" xml:space="preserve">
+    <value>This Vikunja is too old. The plugin needs Vikunja {minimum} or newer.</value>
   </data>
   <data name="Errors.Rejected" xml:space="preserve">
     <value>Vikunja refused the request.</value>

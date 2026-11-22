@@ -186,6 +186,7 @@ public sealed class TasksViewTests
 
 	[TestCase(StoreStatus.Unavailable)]
 	[TestCase(StoreStatus.Unauthorized)]
+	[TestCase(StoreStatus.Outdated)]
 	public void Old_tasks_still_on_screen_are_dimmed_and_marked_when_they_could_not_be_refreshed(StoreStatus status)
 	{
 		var store = StoreWith("Buy milk");

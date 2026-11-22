@@ -16,5 +16,5 @@ jobs:
       version: ${{ github.event.release.tag_name }}
       source: src/VikunjaPlugin
       # Pinned to the SDK version; the workflow default resolves the CLI by SemVer order and can pick an older preview.
-      cli-version: 3.0.1
+      cli-version: 3.0.5
       changelog: ${{ github.event.release.body }}

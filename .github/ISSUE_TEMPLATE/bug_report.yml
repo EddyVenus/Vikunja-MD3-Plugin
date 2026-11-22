@@ -24,7 +24,7 @@ body:
     id: vikunja-version
     attributes:
       label: Vikunja version
-      description: Settings, About in Vikunja, or the "version" field at /api/v1/info.
+      description: Settings, About in Vikunja, or the "version" field at /api/v2/info.
     validations:
       required: true
   - type: dropdown

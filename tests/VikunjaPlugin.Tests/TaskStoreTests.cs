@@ -17,7 +17,7 @@ public sealed class TaskStoreTests
 	[Test]
 	public async Task Refresh_loads_only_open_tasks_from_the_api()
 	{
-		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Tasks(TwoTasks) };
 		var store = fake.CreateStore(out _);
 
 		await store.RefreshAsync(CancellationToken.None);
@@ -52,7 +52,7 @@ public sealed class TaskStoreTests
 	[Test]
 	public async Task A_failed_refresh_keeps_the_tasks_already_shown()
 	{
-		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Tasks(TwoTasks) };
 		var store = fake.CreateStore(out _);
 		await store.RefreshAsync(CancellationToken.None);
 
@@ -63,26 +63,25 @@ public sealed class TaskStoreTests
 	}
 
 	[Test]
-	public async Task Completing_sends_the_whole_task_back_with_done_set_and_removes_it()
+	public async Task Completing_patches_only_done_and_removes_the_task()
 	{
 		var fake = new FakeVikunja
 		{
-			Respond = (method, path) => method == HttpMethod.Get && path.Contains("tasks/1")
-				? FakeVikunja.Json("""{"id":1,"title":"Buy milk","done":false,"description":"2 liters"}""")
-				: method == HttpMethod.Get
-					? FakeVikunja.Json(TwoTasks)
-					: FakeVikunja.Json("""{"id":1,"done":true}"""),
+			Respond = (method, _) => method == HttpMethod.Patch
+				? FakeVikunja.Json("""{"id":1,"title":"Buy milk","done":true}""")
+				: FakeVikunja.Tasks(TwoTasks),
 		};
 		var store = fake.CreateStore(out _);
 		await store.RefreshAsync(CancellationToken.None);
 
 		await store.CompleteAsync(1, CancellationToken.None);
 
-		var post = fake.Requests.Single(r => r.Method == HttpMethod.Post);
-		using var body = JsonDocument.Parse(post.Body);
-		Assert.That(post.Path, Does.EndWith("/tasks/1"));
+		var patch = fake.Requests.Single(r => r.Method != HttpMethod.Get);
+		using var body = JsonDocument.Parse(patch.Body);
+		Assert.That(patch.Method, Is.EqualTo(HttpMethod.Patch));
+		Assert.That(patch.Path, Is.EqualTo("/api/v2/tasks/1"));
+		Assert.That(body.RootElement.EnumerateObject().Select(p => p.Name), Is.EqualTo(OnlyDone));
 		Assert.That(body.RootElement.GetProperty("done").GetBoolean(), Is.True);
-		Assert.That(body.RootElement.GetProperty("description").GetString(), Is.EqualTo("2 liters"));
 		Assert.That(store.Tasks.Peek().Select(t => t.Id), Is.EqualTo(RemainingIds));
 	}
 
@@ -92,7 +91,7 @@ public sealed class TaskStoreTests
 		var fake = new FakeVikunja
 		{
 			Respond = (method, path) => method == HttpMethod.Get && !path.Contains("tasks/")
-				? FakeVikunja.Json(TwoTasks)
+				? FakeVikunja.Tasks(TwoTasks)
 				: new HttpResponseMessage(HttpStatusCode.Unauthorized),
 		};
 		var store = fake.CreateStore(out _);
@@ -109,11 +108,9 @@ public sealed class TaskStoreTests
 	{
 		var fake = new FakeVikunja
 		{
-			Respond = (method, path) => method == HttpMethod.Post
-				? FakeVikunja.Json("""{"id":1,"done":false}""")
-				: path.Contains("/tasks/1")
-					? FakeVikunja.Json("""{"id":1,"title":"Buy milk","done":false}""")
-					: FakeVikunja.Json(TwoTasks),
+			Respond = (method, _) => method == HttpMethod.Patch
+				? FakeVikunja.Json("""{"id":1,"title":"Buy milk","done":false}""")
+				: FakeVikunja.Tasks(TwoTasks),
 		};
 		var store = fake.CreateStore(out _);
 		await store.RefreshAsync(CancellationToken.None);
@@ -134,15 +131,38 @@ public sealed class TaskStoreTests
 		Assert.That(failure!.Reason, Is.EqualTo(VikunjaFailure.NotVikunja));
 	}
 
-	// Vikunja answers 50 per page; this serves `total` tasks as pages of 50 and records how many pages were asked for.
-	private static Func<HttpMethod, string, HttpResponseMessage> Paged(int total, List<int>? pagesAsked = null) => (_, path) =>
+	// Serves `total` tasks as pages of `perPage`, the way a server capping per_page would, and records the pages asked for.
+	private static Func<HttpMethod, string, HttpResponseMessage> Paged(int total, List<int>? pagesAsked = null, int perPage = 50) => (_, path) =>
 	{
 		var page = int.Parse(path.Split("&page=")[1].Split('&')[0], System.Globalization.CultureInfo.InvariantCulture);
 		pagesAsked?.Add(page);
-		var first = (page - 1) * 50 + 1;
-		var ids = Enumerable.Range(first, Math.Max(0, Math.Min(50, total - first + 1)));
-		return FakeVikunja.Json("[" + string.Join(",", ids.Select(id => $$"""{"id":{{id}},"title":"Task {{id}}","done":false}""")) + "]");
+		var first = (page - 1) * perPage + 1;
+		var ids = Enumerable.Range(first, Math.Max(0, Math.Min(perPage, total - first + 1)));
+		var items = "[" + string.Join(",", ids.Select(id => $$"""{"id":{{id}},"title":"Task {{id}}","done":false}""")) + "]";
+		return FakeVikunja.Tasks(items, totalPages: (total + perPage - 1) / perPage);
 	};
+
+	[Test]
+	public async Task A_server_that_caps_the_page_size_is_still_read_to_the_end()
+	{
+		var fake = new FakeVikunja { Respond = Paged(70, perPage: 20) };
+		var store = fake.CreateStore(out _);
+
+		await store.RefreshAsync(CancellationToken.None);
+
+		Assert.That(store.Tasks.Peek(), Has.Count.EqualTo(70));
+	}
+
+	[Test]
+	public async Task A_vikunja_without_api_v2_is_reported_as_too_old()
+	{
+		var fake = new FakeVikunja { Respond = (_, _) => new HttpResponseMessage(HttpStatusCode.NotFound) };
+		var store = fake.CreateStore(out _);
+
+		await store.RefreshAsync(CancellationToken.None);
+
+		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.Outdated));
+	}
 
 	[Test]
 	public async Task At_most_two_hundred_tasks_are_read_and_kept()
@@ -162,7 +182,7 @@ public sealed class TaskStoreTests
 	[TestCase("<html>login</html>")]
 	public async Task An_empty_or_unexpected_answer_keeps_the_old_tasks_and_marks_the_tile_unavailable(string body)
 	{
-		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Tasks(TwoTasks) };
 		var store = fake.CreateStore(out _);
 		await store.RefreshAsync(CancellationToken.None);
 
@@ -192,7 +212,7 @@ public sealed class TaskStoreTests
 	public async Task A_request_that_never_answers_times_out_and_frees_the_store_for_the_next_call()
 	{
 		var credentials = new VikunjaCredentials();
-		credentials.Apply(new Uri("https://vikunja.test/api/v1/"), "t");
+		credentials.Apply(new Uri("https://vikunja.test/api/v2/"), "t");
 		var hang = new HangingHandler();
 		var store = new TaskStore(new VikunjaClient(new HttpClient(hang) { Timeout = TimeSpan.FromMilliseconds(200) }, credentials), Serilog.Core.Logger.None);
 
@@ -237,9 +257,9 @@ public sealed class TaskStoreTests
 
 	private static (TaskStore Store, ListSink Sink, FakeVikunja Fake) LoggedStore(string token)
 	{
-		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Tasks(TwoTasks) };
 		var credentials = new VikunjaCredentials();
-		credentials.Apply(new Uri("https://vikunja.test/api/v1/"), token);
+		credentials.Apply(new Uri("https://vikunja.test/api/v2/"), token);
 		var sink = new ListSink();
 		var logger = new Serilog.LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Sink(sink).CreateLogger();
 		return (new TaskStore(new VikunjaClient(new HttpClient(fake), credentials), logger), sink, fake);
@@ -268,7 +288,7 @@ public sealed class TaskStoreTests
 
 		foreach (var respond in new Func<HttpMethod, string, HttpResponseMessage>[]
 		{
-			(_, _) => FakeVikunja.Json(TwoTasks),
+			(_, _) => FakeVikunja.Tasks(TwoTasks),
 			(_, _) => throw new HttpRequestException("connection refused"),
 			(_, _) => new HttpResponseMessage(HttpStatusCode.Unauthorized),
 			(_, _) => FakeVikunja.Json("<html>login</html>"),
@@ -296,7 +316,7 @@ public sealed class TaskStoreTests
 	{
 		var fake = new FakeVikunja
 		{
-			Respond = (_, _) => FakeVikunja.Json("""
+			Respond = (_, _) => FakeVikunja.Tasks("""
 				[{"id":1,"title":"Undated","due_date":"0001-01-01T00:00:00Z"},
 				 {"id":2,"title":"Later","due_date":"2026-12-01T10:00:00Z"},
 				 {"id":3,"title":"Sooner","due_date":"2026-11-15T10:00:00Z"}]
@@ -311,12 +331,13 @@ public sealed class TaskStoreTests
 
 	private static readonly int[] ExpectedPriorities = [4, 0];
 	private static readonly int[] FourPages = [1, 2, 3, 4];
-	private static readonly string[] EmptyBodies = ["[]", "null"];
+	private static readonly string[] EmptyBodies = ["""{"items":[],"total_pages":0}""", "null"];
+	private static readonly string[] OnlyDone = ["done"];
 
 	[Test]
 	public async Task Priority_is_read_and_missing_priority_means_none()
 	{
-		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json("""[{"id":1,"title":"Urgent","priority":4},{"id":2,"title":"Plain"}]""") };
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Tasks("""[{"id":1,"title":"Urgent","priority":4},{"id":2,"title":"Plain"}]""") };
 		var store = fake.CreateStore(out _);
 
 		await store.RefreshAsync(CancellationToken.None);
@@ -327,7 +348,7 @@ public sealed class TaskStoreTests
 	[Test]
 	public async Task Status_tells_apart_ready_unavailable_unauthorized_and_not_configured()
 	{
-		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Tasks(TwoTasks) };
 		var store = fake.CreateStore(out var credentials);
 		Assert.That(store.Status.Peek(), Is.EqualTo(StoreStatus.Loading));
 
@@ -350,7 +371,7 @@ public sealed class TaskStoreTests
 	[Test]
 	public async Task An_unchanged_list_is_not_written_back()
 	{
-		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Tasks(TwoTasks) };
 		var store = fake.CreateStore(out _);
 		await store.RefreshAsync(CancellationToken.None);
 		var before = store.Tasks.Peek();
@@ -363,7 +384,7 @@ public sealed class TaskStoreTests
 	[Test]
 	public async Task Reset_forgets_the_previous_accounts_tasks()
 	{
-		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Json(TwoTasks) };
+		var fake = new FakeVikunja { Respond = (_, _) => FakeVikunja.Tasks(TwoTasks) };
 		var store = fake.CreateStore(out _);
 		await store.RefreshAsync(CancellationToken.None);
 
@@ -406,7 +427,7 @@ public sealed class TaskStoreTests
 	private static VikunjaClient ClientThrowing(Exception exception)
 	{
 		var credentials = new VikunjaCredentials();
-		credentials.Apply(new Uri("https://vikunja.test/api/v1/"), "t");
+		credentials.Apply(new Uri("https://vikunja.test/api/v2/"), "t");
 		return new VikunjaClient(new HttpClient(new ThrowingHandler(exception)), credentials);
 	}
 
@@ -421,10 +442,10 @@ public sealed class TaskStoreTests
 	{
 		string? header = null;
 		var fake = new FakeVikunja();
-		fake.Respond = (_, _) => FakeVikunja.Json("[]");
+		fake.Respond = (_, _) => FakeVikunja.Tasks("[]");
 		var client = new HttpClient(new HeaderSpy(fake, value => header = value));
 		var credentials = new VikunjaCredentials();
-		credentials.Apply(new Uri("https://vikunja.test/api/v1/"), "secret-token");
+		credentials.Apply(new Uri("https://vikunja.test/api/v2/"), "secret-token");
 
 		await new VikunjaClient(client, credentials).GetOpenTasksAsync(5, CancellationToken.None);
 

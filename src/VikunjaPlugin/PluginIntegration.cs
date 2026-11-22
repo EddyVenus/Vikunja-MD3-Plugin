@@ -66,7 +66,7 @@ public sealed class PluginIntegration : IPluginIntegration, IConfigFlowProvider,
 			var entryId = entries[0].Id;
 			var serverUrl = await context.Config.GetStringAsync(entryId, VikunjaConfigFlow.ServerUrlKey);
 			var token = await context.Config.GetSecretAsync(entryId, VikunjaConfigFlow.TokenKey);
-			_credentials.Apply(Uri.TryCreate(serverUrl, UriKind.Absolute, out var address) ? address : null, token);
+			_credentials.Apply(serverUrl is null ? null : VikunjaConfigFlow.ToApiAddress(serverUrl), token);
 		}
 
 		// The store's loop does the network call, so initialization never waits on Vikunja.
