@@ -15,17 +15,17 @@ echo
 
 # Throwaway account inside a CI container that is deleted with the job.
 password="ci-$(openssl rand -hex 12)"
-curl -sf -X POST "$api/register" -H 'Content-Type: application/json' \
-	-d "{\"username\":\"ci\",\"email\":\"ci@example.invalid\",\"password\":\"$password\"}" > /dev/null
-jwt=$(curl -sf -X POST "$api/login" -H 'Content-Type: application/json' \
-	-d "{\"username\":\"ci\",\"password\":\"$password\"}" | jq -r .token)
+curl -sS --fail-with-body -X POST "$api/register" -H 'Content-Type: application/json' \
+	-d "{\"username\":\"citest\",\"email\":\"citest@example.invalid\",\"password\":\"$password\",\"language\":\"en\"}" > /dev/null
+jwt=$(curl -sS --fail-with-body -X POST "$api/login" -H 'Content-Type: application/json' \
+	-d "{\"username\":\"citest\",\"password\":\"$password\"}" | jq -r .token)
 auth=(-H "Authorization: Bearer $jwt" -H 'Content-Type: application/json')
 
-project=$(curl -sf -X PUT "$api/projects" "${auth[@]}" -d '{"title":"Live test"}' | jq -r .id)
-task=$(curl -sf -X PUT "$api/projects/$project/tasks" "${auth[@]}" \
+project=$(curl -sS --fail-with-body -X PUT "$api/projects" "${auth[@]}" -d '{"title":"Live test"}' | jq -r .id)
+task=$(curl -sS --fail-with-body -X PUT "$api/projects/$project/tasks" "${auth[@]}" \
 	-d '{"title":"Live task","description":"Must survive the check"}' | jq -r .id)
 
-token=$(curl -sf -X PUT "$api/tokens" "${auth[@]}" \
+token=$(curl -sS --fail-with-body -X PUT "$api/tokens" "${auth[@]}" \
 	-d '{"title":"plugin","expires_at":"2099-01-01T00:00:00Z","permissions":{"tasks":["read_all","update"]}}' | jq -r .token)
 
 # The session JWT lets the test read the task back with full rights to check what the PATCH left alone.
